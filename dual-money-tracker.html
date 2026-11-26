@@ -761,4 +761,104 @@
 
       const filtered = entries.filter(e => {
         if (e.wallet !== activeWallet) return false;
-        if (activeFilter !== "all" && e.type !== activeF
+        if (activeFilter !== "all" && e.type !== activeFilter) return false;
+        if (q) {
+          const mCat = e.category.toLowerCase().includes(q);
+          const mNote = (e.note || "").toLowerCase().includes(q);
+          if (!mCat && !mNote) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        box.innerHTML = `<div class="empty">এই সেকশনে এখনো কোনো এন্ট্রি নেই।</div>`;
+        return;
+      }
+
+      box.innerHTML = filtered.map(e => {
+        const isInc = e.type === "income";
+        return `
+          <div class="tx-item">
+            <div>
+              <span class="tx-title">${isInc ? "🟢" : "🔴"} ${e.category}</span>
+              <span class="tx-sub">${e.date}${e.note ? " • " + e.note : ""}</span>
+            </div>
+            <div class="tx-right">
+              <span class="tx-amt ${isInc ? "inc" : "exp"}">${isInc ? "+" : "-"}${e.amount.toLocaleString("en-IN")}৳</span>
+              <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function copyBackup() {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(entries))));
+      document.getElementById("restoreInput").value = encoded;
+      const msg = document.getElementById("statusMsg");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(encoded).then(() => {
+          msg.style.color = "#15803d";
+          msg.textContent = "✔ ব্যাকআপ কোড কপি হয়েছে!";
+        });
+      }
+    }
+
+    function restoreData() {
+      const raw = document.getElementById("restoreInput").value.trim();
+      const msg = document.getElementById("statusMsg");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+        if (!Array.isArray(parsed)) throw new Error();
+        entries = parsed;
+        persist();
+        renderAll();
+        msg.style.color = "#15803d";
+        msg.textContent = "✔ হিসাব সফলভাবে রিস্টোর হয়েছে!";
+      } catch (err) {
+        msg.style.color = "#dc2626";
+        msg.textContent = "❌ কোডটি সঠিক নয়!";
+      }
+    }
+
+    function copySummary() {
+      let myInc = 0, myExp = 0, dadInc = 0, dadExp = 0;
+      entries.forEach(e => {
+        if (e.wallet === "mine") e.type === "income" ? myInc += e.amount : myExp += e.amount;
+        else e.type === "income" ? dadInc += e.amount : dadExp += e.amount;
+      });
+      const text = [
+        "📊 Dual Fund Summary (ESHAN)",
+        `💼 আমার টাকা: আয় ${myInc}৳ | খরচ ${myExp}৳ | ব্যালেন্স ${myInc - myExp}৳`,
+        `🏦 বাবার টাকা: পাওয়া ${dadInc}৳ | খরচ ${dadExp}৳ | ব্যালেন্স ${dadInc - dadExp}৳`
+      ].join("\n");
+      const msg = document.getElementById("statusMsg");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          msg.style.color = "#15803d";
+          msg.textContent = "✔ সামারি রিপোর্ট কপি হয়েছে!";
+        });
+      }
+    }
+
+    function clearAll() {
+      if (entries.length === 0) return;
+      if (confirm("সব আয়-খরচের হিসাব মুছে ফেলতে চান?")) {
+        entries = [];
+        persist();
+        renderAll();
+      }
+    }
+
+    function renderAll() {
+      updateSummary();
+      renderList();
+    }
+
+    switchWallet("mine");
+    setType("expense");
+  </script>
+</body>
+</html>
+
