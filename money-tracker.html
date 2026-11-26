@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>10,000 Tk Savings Tracker v2 — ESHAN</title>
+  <title>10,000 Tk Savings Tracker v3 — ESHAN</title>
   <style>
     :root {
       --bg: #f3f4f6;
@@ -290,19 +290,77 @@
       text-decoration: none;
     }
 
-    .summary-card {
+    .summary-card, .backup-card {
       background: var(--card);
       border-radius: 12px;
       padding: 12px;
       border: 1px solid #e5e7eb;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .summary-title {
       font-size: 0.84rem;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0 0 8px 0;
+      color: var(--text);
+    }
+
+    .backup-desc {
+      font-size: 0.76rem;
       color: var(--muted);
+      margin: 0 0 10px 0;
+      line-height: 1.4;
+    }
+
+    .backup-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .backup-btn {
+      background: #111827;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .backup-btn:active {
+      opacity: 0.85;
+    }
+
+    .restore-input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-family: monospace;
+    }
+
+    .restore-btn {
+      background: var(--primary-dark);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .status-msg {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 4px 0 0 0;
+      min-height: 16px;
     }
 
     .denom-list {
@@ -420,6 +478,20 @@
       <div class="denom-list" id="denomSummary"></div>
     </div>
 
+    <!-- Backup & Restore Section -->
+    <div class="backup-card">
+      <p class="summary-title">Backup & Restore (হিসাব সুরক্ষিত রাখুন)</p>
+      <p class="backup-desc">মাঝেমধ্যে ব্যাকআপ কোড কপি করে WhatsApp বা Notes-এ সেভ রাখুন, যাতে ব্রাউজার ডেটা মুছে গেলেও ফিরে পান।</p>
+      <div class="backup-row">
+        <button class="backup-btn" onclick="copyBackupCode()">📋 Copy Backup Code</button>
+      </div>
+      <div class="backup-row" style="margin-bottom:0;">
+        <input type="text" id="backupInput" class="restore-input" placeholder="ব্যাকআপ কোড এখানে পেস্ট করুন..." />
+        <button class="restore-btn" onclick="restoreBackupCode()">Restore</button>
+      </div>
+      <p class="status-msg" id="backupStatus"></p>
+    </div>
+
     <div class="actions">
       <button class="reset-btn" onclick="resetTracker()">সব রিসেট করুন</button>
       <span class="footer-text">Prepared by ESHAN</span>
@@ -429,9 +501,6 @@
   <script>
     const STORAGE_KEY = "eshan_10k_savings_tracker_v2";
 
-    // Exact 10,000 Tk breakdown:
-    // 500*3=1500, 200*12=2400, 100*21=2100, 50*30=1500, 20*50=1000, 10*80=800, 5*100=500, 2*60=120, 1*80=80
-    // Total = 1500+2400+2100+1500+1000+800+500+120+80 = 10,000 Tk (436 boxes)
     const denominations = [
       { value: 500, count: 3 },
       { value: 200, count: 12 },
@@ -467,6 +536,8 @@
     const extraOnlyTextEl = document.getElementById("extraOnlyText");
     const extraBadgeEl = document.getElementById("extraBadge");
     const denomSummaryEl = document.getElementById("denomSummary");
+    const backupInputEl = document.getElementById("backupInput");
+    const backupStatusEl = document.getElementById("backupStatus");
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -551,6 +622,57 @@
       });
     }
 
+    function copyBackupCode() {
+      const payload = JSON.stringify({
+        c: [...checkedIds],
+        e: extraAmount
+      });
+      const encoded = btoa(payload);
+      backupInputEl.value = encoded;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(encoded).then(() => {
+          backupStatusEl.style.color = "#15803d";
+          backupStatusEl.textContent = "✔ ব্যাকআপ কোড কপি হয়েছে! নিরাপদ কোথাও পেস্ট করে রাখুন।";
+        }).catch(() => {
+          backupInputEl.select();
+          document.execCommand("copy");
+          backupStatusEl.style.color = "#15803d";
+          backupStatusEl.textContent = "✔ বক্স থেকে কোডটি কপি করে রাখুন।";
+        });
+      } else {
+        backupInputEl.select();
+        document.execCommand("copy");
+        backupStatusEl.style.color = "#15803d";
+        backupStatusEl.textContent = "✔ বক্স থেকে কোডটি কপি করে রাখুন।";
+      }
+    }
+
+    function restoreBackupCode() {
+      const raw = backupInputEl.value.trim();
+      if (!raw) {
+        backupStatusEl.style.color = "#b91c1c";
+        backupStatusEl.textContent = "⚠ আগে ব্যাকআপ কোডটি বক্সে পেস্ট করুন।";
+        return;
+      }
+
+      try {
+        const decoded = JSON.parse(atob(raw));
+        if (!Array.isArray(decoded.c)) throw new Error("Invalid format");
+        const validIds = decoded.c.filter(id => Number.isInteger(id) && id >= 0 && id < items.length);
+        checkedIds = new Set(validIds);
+        extraAmount = Math.max(0, Number(decoded.e) || 0);
+        saveState();
+        renderGrid();
+        updateStats();
+        backupStatusEl.style.color = "#15803d";
+        backupStatusEl.textContent = "✔ সফলভাবে আগের সব হিসাব রিস্টোর হয়েছে!";
+      } catch (err) {
+        backupStatusEl.style.color = "#b91c1c";
+        backupStatusEl.textContent = "❌ কোডটি সঠিক নয়! সম্পূর্ণ ব্যাকআপ কোডটি পেস্ট করুন।";
+      }
+    }
+
     document.getElementById("filterBar").addEventListener("click", (e) => {
       if (!e.target.classList.contains("filter-btn")) return;
       document.querySelectorAll(".filter-btn").forEach(btn => btn.classList.remove("active"));
@@ -567,6 +689,7 @@
         saveState();
         renderGrid();
         updateStats();
+        backupStatusEl.textContent = "";
       }
     }
 
