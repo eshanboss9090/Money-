@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>10,000 Tk Savings Tracker v2 — ESHAN</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --primary: #16a34a;
+      --primary-dark: #15803d;
+      --primary-light: #dcfce7;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .header-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      position: sticky;
+      top: 6px;
+      z-index: 100;
+      border: 1px solid #e5e7eb;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 1.08rem;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .owner-badge {
+      background: #111827;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .stat-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 7px 4px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .stat-value.saved {
+      color: var(--primary-dark);
+    }
+
+    .progress-wrap {
+      width: 100%;
+      height: 11px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #15803d);
+      transition: width 0.25s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* Extra / Loose Coins Section */
+    .extra-card {
+      background: var(--accent-light);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .extra-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .extra-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+
+    .extra-total-badge {
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .extra-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .quick-btn {
+      background: #ffffff;
+      border: 1px solid #93c5fd;
+      color: #1d4ed8;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .quick-btn:active {
+      transform: scale(0.95);
+      background: #dbeafe;
+    }
+
+    .quick-btn.minus {
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+
+    .custom-extra-wrap {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .custom-input {
+      width: 64px;
+      padding: 6px 8px;
+      border: 1px solid #93c5fd;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .add-custom-btn {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 6px 11px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .filter-btn.active {
+      background: #111827;
+      color: #ffffff;
+      border-color: #111827;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 2px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .box:active {
+      transform: scale(0.94);
+    }
+
+    .box .check-icon {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .box.checked {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+      text-decoration: line-through;
+    }
+
+    .box.checked .check-icon {
+      color: var(--primary-dark);
+      text-decoration: none;
+    }
+
+    .summary-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 14px;
+    }
+
+    .summary-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: var(--muted);
+    }
+
+    .denom-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .denom-item {
+      display: flex;
+      justify-content: space-between;
+      background: #f9fafb;
+      padding: 6px 9px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .reset-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-text {
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <div class="top-row">
+        <h1 class="title">10,000৳ Savings Tracker</h1>
+        <span class="owner-badge">ESHAN</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-label">সর্বমোট জমা</span>
+          <span class="stat-value saved" id="savedAmount">0৳</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">বাকি আছে</span>
+          <span class="stat-value" id="remainingAmount">10,000৳</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">ঘর পূর্ণ</span>
+          <span class="stat-value" id="boxCount">0 / 436</span>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-meta">
+        <span>চার্ট: <strong id="gridOnlyText">0৳</strong> + বাড়তি: <strong id="extraOnlyText">0৳</strong></span>
+        <span id="percentText">0% সম্পন্ন</span>
+      </div>
+    </div>
+
+    <!-- Extra / Loose Coins Section -->
+    <div class="extra-card">
+      <div class="extra-header">
+        <span class="extra-title">বাড়তি খুচরা / Extra জমা (১/২৳ বা ভাঙতি)</span>
+        <span class="extra-total-badge" id="extraBadge">0৳</span>
+      </div>
+      <div class="extra-controls">
+        <button class="quick-btn" onclick="adjustExtra(1)">+1৳</button>
+        <button class="quick-btn" onclick="adjustExtra(2)">+2৳</button>
+        <button class="quick-btn" onclick="adjustExtra(5)">+5৳</button>
+        <button class="quick-btn minus" onclick="adjustExtra(-1)">-1৳</button>
+        <div class="custom-extra-wrap">
+          <input type="number" id="customExtraInput" class="custom-input" placeholder="টাকা" min="1" />
+          <button class="add-custom-btn" onclick="addCustomExtra()">যোগ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="all">সবগুলো (436)</button>
+      <button class="filter-btn" data-filter="500">500৳</button>
+      <button class="filter-btn" data-filter="200">200৳</button>
+      <button class="filter-btn" data-filter="100">100৳</button>
+      <button class="filter-btn" data-filter="50">50৳</button>
+      <button class="filter-btn" data-filter="20">20৳</button>
+      <button class="filter-btn" data-filter="10">10৳</button>
+      <button class="filter-btn" data-filter="5">5৳</button>
+      <button class="filter-btn" data-filter="2">2৳</button>
+      <button class="filter-btn" data-filter="1">1৳</button>
+    </div>
+
+    <!-- 436 Boxes Grid -->
+    <div class="grid" id="trackerGrid"></div>
+
+    <!-- Denomination Breakdown -->
+    <div class="summary-card">
+      <p class="summary-title">নোট ও কয়েন অনুযায়ী হিসাব (মোট ১০,০০০৳):</p>
+      <div class="denom-list" id="denomSummary"></div>
+    </div>
+
+    <div class="actions">
+      <button class="reset-btn" onclick="resetTracker()">সব রিসেট করুন</button>
+      <span class="footer-text">Prepared by ESHAN</span>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "eshan_10k_savings_tracker_v2";
+
+    // Exact 10,000 Tk breakdown:
+    // 500*3=1500, 200*12=2400, 100*21=2100, 50*30=1500, 20*50=1000, 10*80=800, 5*100=500, 2*60=120, 1*80=80
+    // Total = 1500+2400+2100+1500+1000+800+500+120+80 = 10,000 Tk (436 boxes)
+    const denominations = [
+      { value: 500, count: 3 },
+      { value: 200, count: 12 },
+      { value: 100, count: 21 },
+      { value: 50, count: 30 },
+      { value: 20, count: 50 },
+      { value: 10, count: 80 },
+      { value: 5, count: 100 },
+      { value: 2, count: 60 },
+      { value: 1, count: 80 }
+    ];
+
+    const items = [];
+    let idx = 0;
+    denominations.forEach(d => {
+      for (let i = 0; i < d.count; i++) {
+        items.push({ id: idx++, value: d.value });
+      }
+    });
+
+    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"checked":[],"extra":0}');
+    let checkedIds = new Set(savedData.checked || []);
+    let extraAmount = Number(savedData.extra || 0);
+    let activeFilter = "all";
+
+    const gridEl = document.getElementById("trackerGrid");
+    const savedEl = document.getElementById("savedAmount");
+    const remainingEl = document.getElementById("remainingAmount");
+    const boxCountEl = document.getElementById("boxCount");
+    const progressBarEl = document.getElementById("progressBar");
+    const percentTextEl = document.getElementById("percentText");
+    const gridOnlyTextEl = document.getElementById("gridOnlyText");
+    const extraOnlyTextEl = document.getElementById("extraOnlyText");
+    const extraBadgeEl = document.getElementById("extraBadge");
+    const denomSummaryEl = document.getElementById("denomSummary");
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        checked: [...checkedIds],
+        extra: extraAmount
+      }));
+    }
+
+    function adjustExtra(delta) {
+      extraAmount = Math.max(0, extraAmount + delta);
+      saveState();
+      updateStats();
+    }
+
+    function addCustomExtra() {
+      const input = document.getElementById("customExtraInput");
+      const val = parseInt(input.value, 10);
+      if (!isNaN(val) && val > 0) {
+        extraAmount += val;
+        input.value = "";
+        saveState();
+        updateStats();
+      }
+    }
+
+    function updateStats() {
+      let gridSaved = 0;
+      checkedIds.forEach(id => {
+        if (items[id]) gridSaved += items[id].value;
+      });
+
+      const totalSaved = gridSaved + extraAmount;
+      const goal = 10000;
+      const remaining = Math.max(0, goal - totalSaved);
+      const pct = Math.min(100, (totalSaved / goal) * 100).toFixed(1).replace(/\.0$/, "");
+
+      savedEl.textContent = totalSaved.toLocaleString("en-IN") + "৳";
+      remainingEl.textContent = remaining.toLocaleString("en-IN") + "৳";
+      boxCountEl.textContent = `${checkedIds.size} / ${items.length}`;
+      gridOnlyTextEl.textContent = gridSaved.toLocaleString("en-IN") + "৳";
+      extraOnlyTextEl.textContent = extraAmount.toLocaleString("en-IN") + "৳";
+      extraBadgeEl.textContent = extraAmount.toLocaleString("en-IN") + "৳";
+      progressBarEl.style.width = `${Math.min(100, (totalSaved / goal) * 100)}%`;
+      percentTextEl.textContent = `${pct}% সম্পন্ন`;
+
+      denomSummaryEl.innerHTML = denominations.map(d => {
+        const doneCount = items.filter(item => item.value === d.value && checkedIds.has(item.id)).length;
+        return `
+          <div class="denom-item">
+            <span>${d.value}৳ (${doneCount}/${d.count})</span>
+            <span>${(doneCount * d.value).toLocaleString("en-IN")} / ${(d.count * d.value).toLocaleString("en-IN")}৳</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      items.forEach(item => {
+        if (activeFilter !== "all" && String(item.value) !== activeFilter) return;
+
+        const isChecked = checkedIds.has(item.id);
+        const box = document.createElement("div");
+        box.className = "box" + (isChecked ? " checked" : "");
+        box.innerHTML = `
+          <span class="check-icon">${isChecked ? "✔" : "☐"}</span>
+          <span>${item.value}৳</span>
+        `;
+
+        box.addEventListener("click", () => {
+          if (checkedIds.has(item.id)) {
+            checkedIds.delete(item.id);
+          } else {
+            checkedIds.add(item.id);
+          }
+          saveState();
+          renderGrid();
+          updateStats();
+        });
+
+        gridEl.appendChild(box);
+      });
+    }
+
+    document.getElementById("filterBar").addEventListener("click", (e) => {
+      if (!e.target.classList.contains("filter-btn")) return;
+      document.querySelectorAll(".filter-btn").forEach(btn => btn.classList.remove("active"));
+      e.target.classList.add("active");
+      activeFilter = e.target.dataset.filter;
+      renderGrid();
+    });
+
+    function resetTracker() {
+      if (checkedIds.size === 0 && extraAmount === 0) return;
+      if (confirm("তুমি কি নিশ্চিত যে সব টিক মার্ক এবং বাড়তি হিসাব মুছে নতুন করে শুরু করতে চাও?")) {
+        checkedIds.clear();
+        extraAmount = 0;
+        saveState();
+        renderGrid();
+        updateStats();
+      }
+    }
+
+    renderGrid();
+    updateStats();
+  </script>
+</body>
+</html>
