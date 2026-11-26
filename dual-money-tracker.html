@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dual Money Tracker v3 — ESHAN</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --my-color: #0f766e;
+      --dad-color: #1d4ed8;
+      --inc: #16a34a;
+      --exp: #dc2626;
+      --dark: #0f172a;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding-bottom: 36px;
+    }
+
+    /* Sticky Top Summary */
+    .sticky-top {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      margin-bottom: 10px;
+      position: sticky;
+      top: 6px;
+      z-index: 100;
+      border: 1px solid #e2e8f0;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 1.02rem;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .badge {
+      background: var(--dark);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .wallets-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .wallet-card {
+      border-radius: 12px;
+      padding: 9px 10px;
+      border: 1.5px solid transparent;
+    }
+
+    .wallet-card.mine {
+      background: #f0fdfa;
+      border-color: #99f6e4;
+    }
+
+    .wallet-card.dad {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .w-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .wallet-card.mine .w-label { color: var(--my-color); }
+    .wallet-card.dad .w-label { color: var(--dad-color); }
+
+    .w-bal {
+      font-size: 1.18rem;
+      font-weight: 900;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .w-sub {
+      font-size: 0.66rem;
+      color: var(--muted);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* bKash Monthly Savings Strip */
+    .bkash-strip {
+      background: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      border-radius: 12px;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bkash-left {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #9d174d;
+    }
+
+    .bkash-sub {
+      font-size: 0.68rem;
+      color: #be185d;
+      font-weight: 600;
+      display: block;
+      margin-top: 1px;
+    }
+
+    .bkash-btn {
+      background: #db2777;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .bkash-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Wallet Tabs */
+    .wallet-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .w-tab {
+      padding: 10px 8px;
+      border-radius: 11px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-weight: 800;
+      font-size: 0.83rem;
+      cursor: pointer;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .w-tab.active-mine {
+      background: var(--my-color);
+      color: #ffffff;
+      border-color: var(--my-color);
+    }
+
+    .w-tab.active-dad {
+      background: var(--dad-color);
+      color: #ffffff;
+      border-color: var(--dad-color);
+    }
+
+    /* Form Card */
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 13px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+    }
+
+    .type-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .type-btn {
+      padding: 9px;
+      border-radius: 9px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      font-weight: 800;
+      font-size: 0.84rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .type-btn.active-exp {
+      background: var(--exp);
+      color: #fff;
+      border-color: var(--exp);
+    }
+
+    .type-btn.active-inc {
+      background: var(--inc);
+      color: #fff;
+      border-color: var(--inc);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .field {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-size: 0.86rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: var(--dark);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .kisti-note {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 6px 11px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .pill.active {
+      background: var(--dark);
+      color: #fff;
+      border-color: var(--dark);
+    }
+
+    .tx-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tx-item {
+      background: var(--card);
+      border: 1px solid #e2e8f0;
+      border-radius: 11px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tx-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: block;
+    }
+
+    .tx-sub {
+      font-size: 0.74rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .tx-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tx-amt {
+      font-size: 0.94rem;
+      font-weight: 900;
+    }
+
+    .tx-amt.inc { color: var(--inc); }
+    .tx-amt.exp { color: var(--exp); }
+
+    .del-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 20px;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .sec-title {
+      font-size: 0.84rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+    }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .cat-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 7px 9px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .btn-main {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 8px;
+      background: var(--dark);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-sec {
+      flex: 1;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .msg {
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin: 4px 0 0 0;
+      min-height: 15px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .reset-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sticky-top">
+      <div class="header-row">
+        <h1 class="title">Dual Money Tracker</h1>
+        <span class="badge">ESHAN</span>
+      </div>
+
+      <div class="wallets-overview">
+        <div class="wallet-card mine">
+          <span class="w-label">আমার টাকা (টিউশন + নিজস্ব)</span>
+          <span class="w-bal" id="myBal">0৳</span>
+          <div class="w-sub">
+            <span id="myIncTxt">আয়: 0৳</span>
+            <span id="myExpTxt">খরচ: 0৳</span>
+          </div>
+        </div>
+
+        <div class="wallet-card dad">
+          <span class="w-label">বাবার টাকা (কিস্তি + পরিবার)</span>
+          <span class="w-bal" id="dadBal">0৳</span>
+          <div class="w-sub">
+            <span id="dadIncTxt">পাওয়া: 0৳</span>
+            <span id="dadExpTxt">খরচ: 0৳</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bkash-strip">
+      <div class="bkash-left">
+        <span>📱 মাসিক বিকাশ সেভিংস (২,৫০০৳)</span>
+        <span class="bkash-sub" id="bkashMonthStatus">এই মাসে জমা: 0 / 2,500৳</span>
+      </div>
+      <button type="button" class="bkash-btn" onclick="quickBkashSave()">+2,500৳ জমা</button>
+    </div>
+
+    <div class="wallet-tabs">
+      <button type="button" class="w-tab active-mine" id="tabMine" onclick="switchWallet('mine')">💼 আমার টাকা (টিউশন)</button>
+      <button type="button" class="w-tab" id="tabDad" onclick="switchWallet('dad')">🏦 বাবার টাকা (কিস্তি/পরিবার)</button>
+    </div>
+
+    <div class="kisti-note" id="kistiBanner">
+      📅 রিমাইন্ডার: সপ্তাহে ২ দিন (রবিবার ও বুধবার) কিস্তির হিসাব এখানে রাখো। বাবা ম্যানেজ করতে না পারলে তুমি নিজের টাকা থেকে দিলে “বাবার হয়ে কিস্তি দেওয়া” খাতে লিখে রেখো, যাতে আলাদা হিসাব থাকে।
+    </div>
+
+    <div class="card">
+      <div class="type-row">
+        <button type="button" class="type-btn active-exp" id="btnExp" onclick="setType('expense')">➖ খরচ (Expense)</button>
+        <button type="button" class="type-btn" id="btnInc" onclick="setType('income')">➕ আয় / পাওয়া (In)</button>
+      </div>
+
+      <div class="form-grid">
+        <input type="number" id="amtInput" class="field" placeholder="টাকার পরিমাণ (৳)" min="1" />
+        <select id="catInput" class="field"></select>
+      </div>
+
+      <div class="form-grid">
+        <input type="text" id="noteInput" class="field" placeholder="নোট (যেমন: মার ওষুধ / বোন / রবি কিস্তি)" />
+        <input type="date" id="dateInput" class="field" />
+      </div>
+
+      <button type="button" class="submit-btn" id="saveBtn" onclick="addEntry()">খরচ যোগ করুন</button>
+    </div>
+
+    <div class="filter-bar">
+      <button class="pill active" data-f="all" onclick="setFilter('all', this)">এই ফান্ডের সব</button>
+      <button class="pill" data-f="income" onclick="setFilter('income', this)">শুধু আয়/পাওয়া</button>
+      <button class="pill" data-f="expense" onclick="setFilter('expense', this)">শুধু খরচ</button>
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <input type="text" id="searchBox" class="field" placeholder="🔍 ক্যাটাগরি বা নোট দিয়ে খুঁজুন..." oninput="renderList()" />
+    </div>
+
+    <div class="tx-list" id="txList"></div>
+
+    <div class="card">
+      <p class="sec-title" id="catTitle">আমার খরচের খাতসমূহ:</p>
+      <div class="cat-grid" id="catSummary"></div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">Backup & Restore (উভয় ফান্ড একসাথে)</p>
+      <div class="btn-row">
+        <button type="button" class="btn-main" onclick="copyBackup()">📋 Copy Backup</button>
+        <button type="button" class="btn-sec" onclick="copySummary()">📄 Copy Report</button>
+      </div>
+      <div class="btn-row" style="margin-bottom:0;">
+        <input type="text" id="restoreInput" class="field" style="padding:8px; font-size:0.78rem;" placeholder="ব্যাকআপ কোড পেস্ট করুন..." />
+        <button type="button" class="btn-main" style="flex:0 0 auto; background:#16a34a;" onclick="restoreData()">Restore</button>
+      </div>
+      <p class="msg" id="statusMsg"></p>
+    </div>
+
+    <div class="footer">
+      <button type="button" class="reset-btn" onclick="clearAll()">সব মুছুন</button>
+      <span style="font-size:0.74rem; color:#64748b; font-weight:700;">Prepared by ESHAN</span>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "eshan_dual_money_tracker_v3";
+
+    const walletCategories = {
+      mine: {
+        expense: [
+          "বিকাশ সেভিংস (২,৫০০৳)",
+          "রিচার্জ / ইন্টারনেট",
+          "যাতায়াত",
+          "ওষুধ",
+          "বাজার",
+          "বোন",
+          "মা",
+          "বাবার হয়ে কিস্তি দেওয়া",
+          "অন্যান্য নিজস্ব খরচ"
+        ],
+        income: [
+          "টিউশন বেতন",
+          "অন্যান্য নিজস্ব আয়"
+        ]
+      },
+      dad: {
+        expense: [
+          "কিস্তি (রবি/বুধ)",
+          "বাজার",
+          "ওষুধ",
+          "পরিবারের খরচ",
+          "অন্যান্য পারিবারিক"
+        ],
+        income: [
+          "বাবার পাঠানো টাকা",
+          "অন্যান্য ফান্ড"
+        ]
+      }
+    };
+
+    let activeWallet = "mine";
+    let activeType = "expense";
+    let activeFilter = "all";
+    let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("dateInput").value = today;
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function quickBkashSave() {
+      entries.unshift({
+        id: Date.now(),
+        wallet: "mine",
+        type: "expense",
+        amount: 2500,
+        category: "বিকাশ সেভিংস (২,৫০০৳)",
+        note: "মাসিক বিকাশ সেভিংস",
+        date: today
+      });
+      persist();
+      if (activeWallet !== "mine") switchWallet("mine");
+      else renderAll();
+    }
+
+    function switchWallet(w) {
+      activeWallet = w;
+      const tabMine = document.getElementById("tabMine");
+      const tabDad = document.getElementById("tabDad");
+      const kistiBanner = document.getElementById("kistiBanner");
+      const catTitle = document.getElementById("catTitle");
+
+      if (w === "mine") {
+        tabMine.className = "w-tab active-mine";
+        tabDad.className = "w-tab";
+        kistiBanner.style.display = "none";
+        catTitle.textContent = "আমার খরচের খাতসমূহ (বিকাশ, ডেটা, যাতায়াত, ওষুধ, বাজার, বোন, মা, কিস্তি সাহায্য):";
+      } else {
+        tabDad.className = "w-tab active-dad";
+        tabMine.className = "w-tab";
+        kistiBanner.style.display = "block";
+        catTitle.textContent = "বাবার টাকার খরচের খাতসমূহ (কিস্তি, বাজার, ওষুধ, পরিবার):";
+      }
+
+      refreshCategoryDropdown();
+      renderAll();
+    }
+
+    function setType(t) {
+      activeType = t;
+      const btnExp = document.getElementById("btnExp");
+      const btnInc = document.getElementById("btnInc");
+      const saveBtn = document.getElementById("saveBtn");
+
+      if (t === "expense") {
+        btnExp.className = "type-btn active-exp";
+        btnInc.className = "type-btn";
+        saveBtn.textContent = "খরচ যোগ করুন";
+        saveBtn.style.background = "#dc2626";
+      } else {
+        btnInc.className = "type-btn active-inc";
+        btnExp.className = "type-btn";
+        saveBtn.textContent = activeWallet === "dad" ? "পাওয়া টাকা যোগ করুন" : "আয় যোগ করুন";
+        saveBtn.style.background = "#16a34a";
+      }
+
+      refreshCategoryDropdown();
+    }
+
+    function refreshCategoryDropdown() {
+      const sel = document.getElementById("catInput");
+      const list = walletCategories[activeWallet][activeType];
+      sel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join("");
+    }
+
+    function addEntry() {
+      const amt = parseFloat(document.getElementById("amtInput").value);
+      const cat = document.getElementById("catInput").value;
+      const note = document.getElementById("noteInput").value.trim();
+      const date = document.getElementById("dateInput").value || today;
+
+      if (isNaN(amt) || amt <= 0) {
+        alert("সঠিক টাকার পরিমাণ লিখুন!");
+        return;
+      }
+
+      entries.unshift({
+        id: Date.now(),
+        wallet: activeWallet,
+        type: activeType,
+        amount: amt,
+        category: cat,
+        note: note,
+        date: date
+      });
+
+      persist();
+      document.getElementById("amtInput").value = "";
+      document.getElementById("noteInput").value = "";
+      renderAll();
+    }
+
+    function deleteEntry(id) {
+      if (confirm("এই হিসাবটি মুছে ফেলতে চান?")) {
+        entries = entries.filter(e => e.id !== id);
+        persist();
+        renderAll();
+      }
+    }
+
+    function setFilter(f, el) {
+      activeFilter = f;
+      document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      renderList();
+    }
+
+    function updateSummary() {
+      let myInc = 0, myExp = 0, dadInc = 0, dadExp = 0;
+      let bkashThisMonth = 0;
+      const currentMonth = today.slice(0, 7);
+
+      entries.forEach(e => {
+        if (e.wallet === "mine") {
+          if (e.type === "income") myInc += e.amount;
+          else {
+            myExp += e.amount;
+            if (e.category.includes("বিকাশ সেভিংস") && e.date.startsWith(currentMonth)) {
+              bkashThisMonth += e.amount;
+            }
+          }
+        } else {
+          if (e.type === "income") dadInc += e.amount;
+          else dadExp += e.amount;
+        }
+      });
+
+      document.getElementById("myBal").textContent = (myInc - myExp).toLocaleString("en-IN") + "৳";
+      document.getElementById("myIncTxt").textContent = "আয়: " + myInc.toLocaleString("en-IN") + "৳";
+      document.getElementById("myExpTxt").textContent = "খরচ: " + myExp.toLocaleString("en-IN") + "৳";
+
+      document.getElementById("dadBal").textContent = (dadInc - dadExp).toLocaleString("en-IN") + "৳";
+      document.getElementById("dadIncTxt").textContent = "পাওয়া: " + dadInc.toLocaleString("en-IN") + "৳";
+      document.getElementById("dadExpTxt").textContent = "খরচ: " + dadExp.toLocaleString("en-IN") + "৳";
+
+      const bkStatus = document.getElementById("bkashMonthStatus");
+      bkStatus.textContent = `এই মাসে জমা: ${bkashThisMonth.toLocaleString("en-IN")} / 2,500৳` + (bkashThisMonth >= 2500 ? " ✔ পূর্ণ" : "");
+
+      const expCats = walletCategories[activeWallet].expense;
+      const totals = {};
+      expCats.forEach(c => totals[c] = 0);
+
+      entries.forEach(e => {
+        if (e.wallet === activeWallet && e.type === "expense") {
+          totals[e.category] = (totals[e.category] || 0) + e.amount;
+        }
+      });
+
+      document.getElementById("catSummary").innerHTML = Object.entries(totals)
+        .map(([c, v]) => `
+          <div class="cat-box">
+            <span>${c.replace(" (২,৫০০৳)", "")}</span>
+            <span>${v.toLocaleString("en-IN")}৳</span>
+          </div>
+        `).join("");
+    }
+
+    function renderList() {
+      const box = document.getElementById("txList");
+      const q = document.getElementById("searchBox").value.trim().toLowerCase();
+
+      const filtered = entries.filter(e => {
+        if (e.wallet !== activeWallet) return false;
+        if (activeFilter !== "all" && e.type !== activeF
