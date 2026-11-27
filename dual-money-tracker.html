@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Dual Money Tracker v3 — ESHAN</title>
+  <title>Dual Money Tracker v4 — ESHAN</title>
   <style>
     :root {
       --bg: #f1f5f9;
       --card: #ffffff;
       --my-color: #0f766e;
       --dad-color: #1d4ed8;
+      --debt-color: #9a3412;
       --inc: #16a34a;
       --exp: #dc2626;
       --dark: #0f172a;
@@ -34,7 +35,7 @@
     .container {
       max-width: 560px;
       margin: 0 auto;
-      padding-bottom: 36px;
+      padding-bottom: 40px;
     }
 
     /* Sticky Top Summary */
@@ -106,18 +107,32 @@
     .wallet-card.dad .w-label { color: var(--dad-color); }
 
     .w-bal {
-      font-size: 1.18rem;
+      font-size: 1.15rem;
       font-weight: 900;
       display: block;
       margin-bottom: 3px;
     }
 
     .w-sub {
-      font-size: 0.66rem;
+      font-size: 0.65rem;
       color: var(--muted);
       font-weight: 700;
       display: flex;
       justify-content: space-between;
+    }
+
+    .debt-due-bar {
+      margin-top: 8px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #9a3412;
     }
 
     /* bKash Monthly Savings Strip */
@@ -166,21 +181,22 @@
     /* Wallet Tabs */
     .wallet-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
       margin-bottom: 10px;
     }
 
     .w-tab {
-      padding: 10px 8px;
+      padding: 9px 6px;
       border-radius: 11px;
       border: 1.5px solid var(--border);
       background: var(--card);
       font-weight: 800;
-      font-size: 0.83rem;
+      font-size: 0.76rem;
       cursor: pointer;
       color: var(--muted);
       text-align: center;
+      line-height: 1.25;
     }
 
     .w-tab.active-mine {
@@ -193,6 +209,12 @@
       background: var(--dad-color);
       color: #ffffff;
       border-color: var(--dad-color);
+    }
+
+    .w-tab.active-debt {
+      background: var(--debt-color);
+      color: #ffffff;
+      border-color: var(--debt-color);
     }
 
     /* Form Card */
@@ -217,7 +239,7 @@
       border: 1.5px solid var(--border);
       background: #f8fafc;
       font-weight: 800;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       cursor: pointer;
       color: var(--muted);
     }
@@ -246,7 +268,7 @@
       padding: 9px 10px;
       border: 1.5px solid var(--border);
       border-radius: 9px;
-      font-size: 0.86rem;
+      font-size: 0.85rem;
       font-family: inherit;
       background: #fff;
       color: var(--text);
@@ -268,16 +290,52 @@
       transform: scale(0.98);
     }
 
-    .kisti-note {
+    .info-note {
       background: #fffbeb;
       border: 1px solid #fde68a;
       color: #92400e;
       border-radius: 10px;
       padding: 8px 10px;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
       margin-bottom: 10px;
       display: none;
+    }
+
+    .info-note.debt-note {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
+    }
+
+    .person-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .p-card {
+      background: #fff;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .p-name {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #7c2d12;
+      display: block;
+    }
+
+    .p-amt {
+      font-size: 0.9rem;
+      font-weight: 900;
+      color: #c2410c;
+      display: block;
+      margin-top: 2px;
     }
 
     .filter-bar {
@@ -328,7 +386,7 @@
     }
 
     .tx-sub {
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       color: var(--muted);
       display: block;
       margin-top: 2px;
@@ -342,7 +400,7 @@
     }
 
     .tx-amt {
-      font-size: 0.94rem;
+      font-size: 0.92rem;
       font-weight: 900;
     }
 
@@ -389,7 +447,7 @@
       padding: 7px 9px;
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
     }
 
@@ -453,7 +511,7 @@
   <div class="container">
     <div class="sticky-top">
       <div class="header-row">
-        <h1 class="title">Dual Money Tracker</h1>
+        <h1 class="title">Dual Money Tracker v4</h1>
         <span class="badge">ESHAN</span>
       </div>
 
@@ -476,6 +534,11 @@
           </div>
         </div>
       </div>
+
+      <div class="debt-due-bar">
+        <span>🤝 মোট বাকি ধার / বকেয়া: <strong id="totalDebtDue">0৳</strong></span>
+        <span id="debtBreakdownShort" style="font-size:0.68rem;">Joya: 0৳ • Frds: 0৳ • মুদি: 0৳</span>
+      </div>
     </div>
 
     <div class="bkash-strip">
@@ -487,12 +550,32 @@
     </div>
 
     <div class="wallet-tabs">
-      <button type="button" class="w-tab active-mine" id="tabMine" onclick="switchWallet('mine')">💼 আমার টাকা (টিউশন)</button>
-      <button type="button" class="w-tab" id="tabDad" onclick="switchWallet('dad')">🏦 বাবার টাকা (কিস্তি/পরিবার)</button>
+      <button type="button" class="w-tab active-mine" id="tabMine" onclick="switchWallet('mine')">💼 আমার টাকা</button>
+      <button type="button" class="w-tab" id="tabDad" onclick="switchWallet('dad')">🏦 বাবার টাকা</button>
+      <button type="button" class="w-tab" id="tabDebt" onclick="switchWallet('debt')">🤝 ধার / বাকি</button>
     </div>
 
-    <div class="kisti-note" id="kistiBanner">
-      📅 রিমাইন্ডার: সপ্তাহে ২ দিন (রবিবার ও বুধবার) কিস্তির হিসাব এখানে রাখো। বাবা ম্যানেজ করতে না পারলে তুমি নিজের টাকা থেকে দিলে “বাবার হয়ে কিস্তি দেওয়া” খাতে লিখে রেখো, যাতে আলাদা হিসাব থাকে।
+    <div class="info-note" id="kistiBanner">
+      📅 রিমাইন্ডার: সপ্তাহে ২ দিন (রবিবার ও বুধবার) কিস্তির হিসাব এখানে রাখো। বাবা ম্যানেজ করতে না পারলে তুমি নিজের টাকা থেকে দিলে “বাবার হয়ে কিস্তি দেওয়া” খাতে লিখে রেখো।
+    </div>
+
+    <div class="info-note debt-note" id="debtBanner">
+      🤝 মাস শেষের শর্টেজে Joya, Friends বা পরিচিত মুদির দোকান থেকে নেওয়া ধার/বাকি এখানে আলাদা রাখো। শোধ করলে “পরিশোধ / শোধ করা” সিলেক্ট করে অ্যামাউন্ট বসালেই বকেয়া কমে যাবে।
+    </div>
+
+    <div id="debtPersonCards" class="person-summary-grid" style="display:none;">
+      <div class="p-card">
+        <span class="p-name">Joya</span>
+        <span class="p-amt" id="dueJoya">0৳</span>
+      </div>
+      <div class="p-card">
+        <span class="p-name">Friends</span>
+        <span class="p-amt" id="dueFrds">0৳</span>
+      </div>
+      <div class="p-card">
+        <span class="p-name">মুদির দোকান</span>
+        <span class="p-amt" id="dueMudir">0৳</span>
+      </div>
     </div>
 
     <div class="card">
@@ -515,13 +598,13 @@
     </div>
 
     <div class="filter-bar">
-      <button class="pill active" data-f="all" onclick="setFilter('all', this)">এই ফান্ডের সব</button>
-      <button class="pill" data-f="income" onclick="setFilter('income', this)">শুধু আয়/পাওয়া</button>
-      <button class="pill" data-f="expense" onclick="setFilter('expense', this)">শুধু খরচ</button>
+      <button class="pill active" data-f="all" onclick="setFilter('all', this)">এই সেকশনের সব</button>
+      <button class="pill" data-f="income" id="pillInc" onclick="setFilter('income', this)">শুধু আয়/পাওয়া</button>
+      <button class="pill" data-f="expense" id="pillExp" onclick="setFilter('expense', this)">শুধু খরচ</button>
     </div>
 
     <div style="margin-bottom:10px;">
-      <input type="text" id="searchBox" class="field" placeholder="🔍 ক্যাটাগরি বা নোট দিয়ে খুঁজুন..." oninput="renderList()" />
+      <input type="text" id="searchBox" class="field" placeholder="🔍 খাত বা নোট দিয়ে খুঁজুন..." oninput="renderList()" />
     </div>
 
     <div class="tx-list" id="txList"></div>
@@ -532,7 +615,7 @@
     </div>
 
     <div class="card">
-      <p class="sec-title">Backup & Restore (উভয় ফান্ড একসাথে)</p>
+      <p class="sec-title">Backup & Restore (সব ফান্ড ও ধার/বাকি একসাথে)</p>
       <div class="btn-row">
         <button type="button" class="btn-main" onclick="copyBackup()">📋 Copy Backup</button>
         <button type="button" class="btn-sec" onclick="copySummary()">📄 Copy Report</button>
@@ -551,7 +634,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "eshan_dual_money_tracker_v3";
+    const STORAGE_KEY = "eshan_dual_money_tracker_v4";
 
     const walletCategories = {
       mine: {
@@ -582,6 +665,18 @@
         income: [
           "বাবার পাঠানো টাকা",
           "অন্যান্য ফান্ড"
+        ]
+      },
+      debt: {
+        income: [
+          "Joya থেকে ধার",
+          "Friends থেকে ধার",
+          "মুদির দোকানে বাকি"
+        ],
+        expense: [
+          "Joya শোধ করা",
+          "Friends শোধ করা",
+          "মুদির দোকানে পরিশোধ"
         ]
       }
     };
@@ -617,22 +712,39 @@
       activeWallet = w;
       const tabMine = document.getElementById("tabMine");
       const tabDad = document.getElementById("tabDad");
+      const tabDebt = document.getElementById("tabDebt");
       const kistiBanner = document.getElementById("kistiBanner");
+      const debtBanner = document.getElementById("debtBanner");
+      const debtPersonCards = document.getElementById("debtPersonCards");
       const catTitle = document.getElementById("catTitle");
+      const pillInc = document.getElementById("pillInc");
+      const pillExp = document.getElementById("pillExp");
+
+      tabMine.className = "w-tab" + (w === "mine" ? " active-mine" : "");
+      tabDad.className = "w-tab" + (w === "dad" ? " active-dad" : "");
+      tabDebt.className = "w-tab" + (w === "debt" ? " active-debt" : "");
+
+      kistiBanner.style.display = w === "dad" ? "block" : "none";
+      debtBanner.style.display = w === "debt" ? "block" : "none";
+      debtPersonCards.style.display = w === "debt" ? "grid" : "none";
 
       if (w === "mine") {
-        tabMine.className = "w-tab active-mine";
-        tabDad.className = "w-tab";
-        kistiBanner.style.display = "none";
-        catTitle.textContent = "আমার খরচের খাতসমূহ (বিকাশ, ডেটা, যাতায়াত, ওষুধ, বাজার, বোন, মা, কিস্তি সাহায্য):";
+        catTitle.textContent = "আমার খরচের খাতসমূহ:";
+        pillInc.textContent = "শুধু আয়";
+        pillExp.textContent = "শুধু খরচ";
+        setType("expense");
+      } else if (w === "dad") {
+        catTitle.textContent = "বাবার টাকার খরচের খাতসমূহ:";
+        pillInc.textContent = "শুধু পাওয়া";
+        pillExp.textContent = "শুধু খরচ";
+        setType("expense");
       } else {
-        tabDad.className = "w-tab active-dad";
-        tabMine.className = "w-tab";
-        kistiBanner.style.display = "block";
-        catTitle.textContent = "বাবার টাকার খরচের খাতসমূহ (কিস্তি, বাজার, ওষুধ, পরিবার):";
+        catTitle.textContent = "পরিশোধকৃত ধার/বাকির হিসাব:";
+        pillInc.textContent = "নেওয়া ধার/বাকি";
+        pillExp.textContent = "শোধ করা";
+        setType("income");
       }
 
-      refreshCategoryDropdown();
       renderAll();
     }
 
@@ -642,16 +754,34 @@
       const btnInc = document.getElementById("btnInc");
       const saveBtn = document.getElementById("saveBtn");
 
-      if (t === "expense") {
-        btnExp.className = "type-btn active-exp";
-        btnInc.className = "type-btn";
-        saveBtn.textContent = "খরচ যোগ করুন";
-        saveBtn.style.background = "#dc2626";
+      if (activeWallet === "debt") {
+        btnInc.textContent = "➕ ধার / বাকি নেওয়া";
+        btnExp.textContent = "➖ পরিশোধ / শোধ করা";
+        if (t === "income") {
+          btnInc.className = "type-btn active-inc";
+          btnExp.className = "type-btn";
+          saveBtn.textContent = "ধার / বাকি যোগ করুন";
+          saveBtn.style.background = "#16a34a";
+        } else {
+          btnExp.className = "type-btn active-exp";
+          btnInc.className = "type-btn";
+          saveBtn.textContent = "পরিশোধ এন্ট্রি করুন";
+          saveBtn.style.background = "#dc2626";
+        }
       } else {
-        btnInc.className = "type-btn active-inc";
-        btnExp.className = "type-btn";
-        saveBtn.textContent = activeWallet === "dad" ? "পাওয়া টাকা যোগ করুন" : "আয় যোগ করুন";
-        saveBtn.style.background = "#16a34a";
+        btnInc.textContent = "➕ আয় / পাওয়া (In)";
+        btnExp.textContent = "➖ খরচ (Expense)";
+        if (t === "expense") {
+          btnExp.className = "type-btn active-exp";
+          btnInc.className = "type-btn";
+          saveBtn.textContent = "খরচ যোগ করুন";
+          saveBtn.style.background = "#dc2626";
+        } else {
+          btnInc.className = "type-btn active-inc";
+          btnExp.className = "type-btn";
+          saveBtn.textContent = activeWallet === "dad" ? "পাওয়া টাকা যোগ করুন" : "আয় যোগ করুন";
+          saveBtn.style.background = "#16a34a";
+        }
       }
 
       refreshCategoryDropdown();
@@ -705,6 +835,23 @@
       renderList();
     }
 
+    function calcDebts() {
+      let joya = 0, frds = 0, mudir = 0;
+      entries.forEach(e => {
+        if (e.wallet !== "debt") return;
+        const delta = e.type === "income" ? e.amount : -e.amount;
+        if (e.category.includes("Joya")) joya += delta;
+        else if (e.category.includes("Friends")) frds += delta;
+        else if (e.category.includes("মুদির")) mudir += delta;
+      });
+      return {
+        joya: Math.max(0, joya),
+        frds: Math.max(0, frds),
+        mudir: Math.max(0, mudir),
+        total: Math.max(0, joya) + Math.max(0, frds) + Math.max(0, mudir)
+      };
+    }
+
     function updateSummary() {
       let myInc = 0, myExp = 0, dadInc = 0, dadExp = 0;
       let bkashThisMonth = 0;
@@ -719,7 +866,7 @@
               bkashThisMonth += e.amount;
             }
           }
-        } else {
+        } else if (e.wallet === "dad") {
           if (e.type === "income") dadInc += e.amount;
           else dadExp += e.amount;
         }
@@ -732,6 +879,15 @@
       document.getElementById("dadBal").textContent = (dadInc - dadExp).toLocaleString("en-IN") + "৳";
       document.getElementById("dadIncTxt").textContent = "পাওয়া: " + dadInc.toLocaleString("en-IN") + "৳";
       document.getElementById("dadExpTxt").textContent = "খরচ: " + dadExp.toLocaleString("en-IN") + "৳";
+
+      const debts = calcDebts();
+      document.getElementById("totalDebtDue").textContent = debts.total.toLocaleString("en-IN") + "৳";
+      document.getElementById("debtBreakdownShort").textContent =
+        `Joya: ${debts.joya.toLocaleString("en-IN")}৳ • Frds: ${debts.frds.toLocaleString("en-IN")}৳ • মুদি: ${debts.mudir.toLocaleString("en-IN")}৳`;
+
+      document.getElementById("dueJoya").textContent = debts.joya.toLocaleString("en-IN") + "৳";
+      document.getElementById("dueFrds").textContent = debts.frds.toLocaleString("en-IN") + "৳";
+      document.getElementById("dueMudir").textContent = debts.mudir.toLocaleString("en-IN") + "৳";
 
       const bkStatus = document.getElementById("bkashMonthStatus");
       bkStatus.textContent = `এই মাসে জমা: ${bkashThisMonth.toLocaleString("en-IN")} / 2,500৳` + (bkashThisMonth >= 2500 ? " ✔ পূর্ণ" : "");
@@ -777,6 +933,9 @@
 
       box.innerHTML = filtered.map(e => {
         const isInc = e.type === "income";
+        const sign = activeWallet === "debt"
+          ? (isInc ? "ধার +" : "শোধ -")
+          : (isInc ? "+" : "-");
         return `
           <div class="tx-item">
             <div>
@@ -784,7 +943,7 @@
               <span class="tx-sub">${e.date}${e.note ? " • " + e.note : ""}</span>
             </div>
             <div class="tx-right">
-              <span class="tx-amt ${isInc ? "inc" : "exp"}">${isInc ? "+" : "-"}${e.amount.toLocaleString("en-IN")}৳</span>
+              <span class="tx-amt ${isInc ? "inc" : "exp"}">${sign}${e.amount.toLocaleString("en-IN")}৳</span>
               <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
             </div>
           </div>
@@ -826,12 +985,14 @@
       let myInc = 0, myExp = 0, dadInc = 0, dadExp = 0;
       entries.forEach(e => {
         if (e.wallet === "mine") e.type === "income" ? myInc += e.amount : myExp += e.amount;
-        else e.type === "income" ? dadInc += e.amount : dadExp += e.amount;
+        else if (e.wallet === "dad") e.type === "income" ? dadInc += e.amount : dadExp += e.amount;
       });
+      const debts = calcDebts();
       const text = [
-        "📊 Dual Fund Summary (ESHAN)",
+        "📊 Dual Fund & Debt Summary (ESHAN)",
         `💼 আমার টাকা: আয় ${myInc}৳ | খরচ ${myExp}৳ | ব্যালেন্স ${myInc - myExp}৳`,
-        `🏦 বাবার টাকা: পাওয়া ${dadInc}৳ | খরচ ${dadExp}৳ | ব্যালেন্স ${dadInc - dadExp}৳`
+        `🏦 বাবার টাকা: পাওয়া ${dadInc}৳ | খরচ ${dadExp}৳ | ব্যালেন্স ${dadInc - dadExp}৳`,
+        `🤝 বকেয়া ধার/বাকি: মোট ${debts.total}৳ (Joya: ${debts.joya}৳, Frds: ${debts.frds}৳, মুদি: ${debts.mudir}৳)`
       ].join("\n");
       const msg = document.getElementById("statusMsg");
       if (navigator.clipboard) {
@@ -844,7 +1005,7 @@
 
     function clearAll() {
       if (entries.length === 0) return;
-      if (confirm("সব আয়-খরচের হিসাব মুছে ফেলতে চান?")) {
+      if (confirm("সব আয়-খরচ ও ধার/বাকির হিসাব মুছে ফেলতে চান?")) {
         entries = [];
         persist();
         renderAll();
@@ -857,8 +1018,6 @@
     }
 
     switchWallet("mine");
-    setType("expense");
   </script>
 </body>
 </html>
-
