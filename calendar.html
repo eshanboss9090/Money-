@@ -2,197 +2,1075 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Babar Kisti Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>বাবার কিস্তি ক্যালেন্ডার ও হিসাব (২০২৬-২০২৭)</title>
 <style>
-*{box-sizing:border-box;font-family:Hind Siliguri,Arial,sans-serif}
-body{margin:0;background:#f1f5f9;padding:12px}
-.card{background:#fff;border-radius:16px;padding:14px;max-width:480px;margin:auto;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-h2{text-align:center;margin:4px 0 2px}
-.sub{text-align:center;color:#64748b;font-size:13px;margin-bottom:12px}
-.top{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.box{border-radius:12px;padding:12px;color:#fff}
-.box small{opacity:.9}
-.box b{font-size:22px;display:block}
-.monthTotal{background:#0f172a}
-.selectedTotal{background:#16a34a}
-.nav{display:flex;justify-content:space-between;align-items:center;margin:14px 0}
-.nav button{border:0;background:#e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700}
-.nav b{font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
-.dayName{font-size:12px;color:#94a3b8;font-weight:700;padding:4px 0}
-.day{border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 2px;cursor:pointer;min-height:56px;position:relative;background:#fff}
-.day small{font-size:11px;display:block;line-height:1.2}
-.day.sun{border-color:#fca5a5;background:#fff1f2}
-.day.wed{border-color:#93c5fd;background:#eff6ff}
-.day.holiday{background:#fee2e2!important;border-color:#ef4444!important;opacity:.9}
-.day.holiday small{color:#dc2626;font-weight:700}
-.day.selected{background:#16a34a!important;color:#fff;border-color:#16a34a}
-.day.selected small{color:#fff}
-.day.today{outline:2px solid #000}
-.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:12px;justify-content:center}
-.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-.btn{width:100%;margin-top:12px;border:0;padding:12px;border-radius:12px;font-weight:700;background:#0f172a;color:#fff}
-.holidayList{margin-top:14px;font-size:13px;background:#fff7ed;border-radius:12px;padding:10px}
-input,select{padding:10px;border-radius:10px;border:1px solid #cbd5e1;width:100%;margin-top:6px}
-.row{display:flex;gap:8px}
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --primary: #0f766e;
+    --primary-dark: #115e59;
+    --sunday-bg: #eff6ff;
+    --sunday-border: #93c5fd;
+    --sunday-text: #1d4ed8;
+    --wed-bg: #f0fdf4;
+    --wed-border: #86efac;
+    --wed-text: #15803d;
+    --holiday-bg: #fef2f2;
+    --holiday-border: #fca5a5;
+    --holiday-text: #b91c1c;
+    --selected-bg: #0f766e;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+    line-height: 1.35;
+    padding-bottom: 34px;
+  }
+
+  .app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 8px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .header p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .summary-panel {
+    position: sticky;
+    top: 6px;
+    z-index: 50;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-box {
+    border-radius: 12px;
+    padding: 10px;
+    position: relative;
+  }
+
+  .stat-box.tapped {
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+    color: #ffffff;
+  }
+
+  .stat-box.monthly {
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    color: var(--text-main);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.92;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    display: block;
+  }
+
+  .stat-sub {
+    font-size: 0.7rem;
+    opacity: 0.88;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .clear-btn {
+    margin-top: 5px;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .clear-btn:active {
+    transform: scale(0.96);
+  }
+
+  .monthly-breakdown {
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .badge-pill {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    padding: 8px 10px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .nav-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-btn:active {
+    background: #e2e8f0;
+  }
+
+  .month-select-wrap {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  select {
+    padding: 6px 8px;
+    border-radius: 9px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-main);
+    outline: none;
+  }
+
+  .quick-jump-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .jump-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f766e;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .jump-chip:active {
+    background: #ccfbf1;
+  }
+
+  .mode-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+  }
+
+  .mode-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-main);
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cbd5e1;
+    transition: 0.25s;
+    border-radius: 20px;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.25s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: #dc2626;
+  }
+  input:checked + .slider:before {
+    transform: translateX(18px);
+  }
+
+  .edit-banner {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 0.76rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .edit-banner.active {
+    display: block;
+  }
+
+  .calendar-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 6px 5px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    width: 100%;
+  }
+
+  .calendar-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 3px;
+  }
+
+  .calendar-table th {
+    width: 14.2857%;
+    text-align: center;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    padding: 4px 0 8px 0;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .calendar-table th:first-child { color: var(--sunday-text); }
+  .calendar-table th:nth-child(4) { color: var(--wed-text); }
+
+  .calendar-table td {
+    width: 14.2857%;
+    vertical-align: top;
+    padding: 0;
+  }
+
+  .day-cell {
+    width: 100%;
+    height: 72px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    padding: 5px 1px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    transition: transform 0.1s ease, background-color 0.15s ease;
+  }
+
+  .day-cell:active {
+    transform: scale(0.95);
+  }
+
+  .day-cell.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+  .day-cell.empty:active {
+    transform: none;
+  }
+
+  .day-num {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.1;
+  }
+
+  .day-cell.today {
+    box-shadow: inset 0 0 0 2.5px #f59e0b;
+  }
+
+  .day-cell.kisti-sun {
+    background: var(--sunday-bg);
+    border-color: var(--sunday-border);
+  }
+  .day-cell.kisti-sun .day-num {
+    color: var(--sunday-text);
+  }
+
+  .day-cell.kisti-wed {
+    background: var(--wed-bg);
+    border-color: var(--wed-border);
+  }
+  .day-cell.kisti-wed .day-num {
+    color: var(--wed-text);
+  }
+
+  .kisti-tag {
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 3px 1px;
+    border-radius: 5px;
+    width: 96%;
+    text-align: center;
+    white-space: nowrap;
+    letter-spacing: -0.4px;
+    line-height: 1.1;
+  }
+
+  .kisti-sun .kisti-tag {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .kisti-wed .kisti-tag {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .day-cell.holiday {
+    background: var(--holiday-bg);
+    border-color: var(--holiday-border);
+  }
+  .day-cell.holiday .day-num {
+    color: var(--holiday-text);
+  }
+  .holiday-tag {
+    font-size: 0.64rem;
+    font-weight: 700;
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 2px 2px;
+    border-radius: 4px;
+    width: 95%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .off-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #b91c1c;
+    background: #fff;
+    border: 1px solid #fca5a5;
+    padding: 0 4px;
+    border-radius: 4px;
+    line-height: 1.15;
+  }
+
+  .day-cell.selected {
+    background: var(--selected-bg) !important;
+    border-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(15, 118, 110, 0.35);
+  }
+  .day-cell.selected .day-num {
+    color: #ffffff !important;
+  }
+  .day-cell.selected .kisti-tag {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+  }
+  .check-badge {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    color: #a7f3d0;
+  }
+
+  .holiday-list-card {
+    margin-top: 10px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .holiday-list-card h3 {
+    font-size: 0.88rem;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .holiday-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b;
+    margin-bottom: 5px;
+    border: 1px solid #fecaca;
+    gap: 6px;
+  }
+  .holiday-item:last-child {
+    margin-bottom: 0;
+  }
+  .holiday-impact {
+    font-weight: 700;
+    font-size: 0.7rem;
+    background: #ffffff;
+    padding: 2px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    transition: transform 0.25s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .footer-credit {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 14px;
+  }
 </style>
 </head>
 <body>
-<div class="card">
-<h2>🗓️ বাবার কিস্তি ক্যালেন্ডার</h2>
-<p class="sub">রবিবার ১০০০৳ • বুধবার ৮৫০৳ (২ ডিসেম্বর থেকে ৬০০৳) • ব্যাংক ছুটিতে কিস্তি OFF</p>
 
-<div class="top">
-<div class="box monthTotal"><small id="monthLabel">এই মাসে মোট লাগবে</small><b id="monthTotal">০৳</b><small id="monthDetail"></small></div>
-<div class="box selectedTotal"><small>তুমি ট্যাপ করছো</small><b id="selectedTotal">০৳</b><small id="selectedDetail">কোনো তারিখ সিলেক্ট করো নাই</small></div>
+<div class="app-container">
+  <div class="header">
+    <h1>📅 বাবার কিস্তি ক্যালেন্ডার (২০২৬–২০২৭)</h1>
+    <p>রবি: ১,০০০৳ | বুধ: ৮৫০৳ (২ ডিসে পর্যন্ত), এরপর ৬০০৳ • ছুটিতে বন্ধ</p>
+  </div>
+
+  <!-- Top Automatic + Tapped Calculator -->
+  <div class="summary-panel">
+    <div class="summary-grid">
+      <div class="stat-box tapped">
+        <span class="stat-label">ট্যাপ করা কিস্তির যোগফল</span>
+        <span class="stat-value" id="tappedTotal">০ ৳</span>
+        <span class="stat-sub" id="tappedCount">০টি কিস্তি সিলেক্টেড</span>
+        <button class="clear-btn" onclick="clearMonthSelection()">✕ মুছুন</button>
+      </div>
+      <div class="stat-box monthly">
+        <span class="stat-label">এই মাসে মোট লাগবে</span>
+        <span class="stat-value" id="monthlyTotal" style="color: #0f766e;">০ ৳</span>
+        <span class="stat-sub" id="monthlyCount">ছুটি বাদে মোট ০টি কিস্তি</span>
+      </div>
+    </div>
+    <div class="monthly-breakdown" id="monthlyBreakdown"></div>
+  </div>
+
+  <!-- Month / Year Controls -->
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="changeMonth(-1)" aria-label="Previous Month">‹</button>
+    <div class="month-select-wrap">
+      <select id="monthSelect" onchange="onSelectChange()"></select>
+      <select id="yearSelect" onchange="onSelectChange()"></select>
+    </div>
+    <button class="nav-btn" onclick="changeMonth(1)" aria-label="Next Month">›</button>
+  </div>
+
+  <div class="quick-jump-row">
+    <button class="jump-chip" onclick="jumpTo(2026, 10)">নভে ২০২৬</button>
+    <button class="jump-chip" onclick="jumpTo(2026, 11)">ডিসে ২০২৬</button>
+    <button class="jump-chip" onclick="jumpTo(2027, 0)">জানু ২০২৭</button>
+    <button class="jump-chip" onclick="jumpTo(2027, 2)">মার্চ ২০২৭</button>
+  </div>
+
+  <!-- Custom Holiday Toggle -->
+  <div class="mode-bar">
+    <label class="mode-toggle-label">
+      <label class="switch">
+        <input type="checkbox" id="holidayEditToggle" onchange="toggleEditMode()">
+        <span class="slider"></span>
+      </label>
+      <span>ব্যাংক ছুটি যোগ / বাতিল করুন</span>
+    </label>
+    <button onclick="resetCustomHolidays()" style="background:none;border:none;color:#64748b;font-size:0.74rem;text-decoration:underline;cursor:pointer;">রিসেট</button>
+  </div>
+
+  <div class="edit-banner" id="editBanner">
+    ⚠️ ছুটি এডিট মোড চালু: যেকোনো তারিখে ট্যাপ করে ব্যাংক ছুটি যোগ বা বাতিল করুন।
+  </div>
+
+  <!-- Fixed 7-Column Calendar Table -->
+  <div class="calendar-card">
+    <table class="calendar-table">
+      <thead>
+        <tr>
+          <th>রবি</th>
+          <th>সোম</th>
+          <th>মঙ্গল</th>
+          <th>বুধ</th>
+          <th>বৃহঃ</th>
+          <th>শুক্র</th>
+          <th>শনি</th>
+        </tr>
+      </thead>
+      <tbody id="calendarBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><span class="dot" style="background:#dbeafe;border:1px solid #93c5fd;"></span> রবিবার (১,০০০৳)</div>
+    <div class="legend-item"><span class="dot" style="background:#dcfce7;border:1px solid #86efac;"></span> বুধবার (৮৫০৳ / ৬০০৳)</div>
+    <div class="legend-item"><span class="dot" style="background:#0f766e;"></span> ট্যাপ করা</div>
+    <div class="legend-item"><span class="dot" style="background:#fee2e2;border:1px solid #fca5a5;"></span> ব্যাংক ছুটি (OFF)</div>
+  </div>
+
+  <!-- Month Holiday List -->
+  <div class="holiday-list-card" id="holidayListCard">
+    <h3>
+      <span>🏦 এই মাসের ব্যাংক ছুটির তালিকা</span>
+      <span class="badge-pill" id="holidayCountBadge">০টি</span>
+    </h3>
+    <div id="holidayListContainer"></div>
+  </div>
+
+  <div class="footer-credit">
+    Prepared for Eshan • 2026 & 2027 Official Holidays • Auto-Saved
+  </div>
 </div>
 
-<div class="nav">
-<button onclick="changeMonth(-1)">◀ আগের</button>
-<b id="title">January 2026</b>
-<button onclick="changeMonth(1)">পরের ▶</button>
-</div>
-
-<div class="row">
-<select id="yearSel" onchange="setYear(this.value)"><option value="2026">2026</option><option value="2027">2027</option></select>
-<select id="monthSel" onchange="setMonth(this.value)"></select>
-</div>
-
-<div class="grid" id="weekRow"></div>
-<div class="grid" id="cal"></div>
-
-<div class="legend">
-<span><span class="dot" style="background:#fecaca"></span> রবিবার ১০০০৳</span>
-<span><span class="dot" style="background:#bfdbfe"></span> বুধবার ৬০০/৮৫০৳</span>
-<span><span class="dot" style="background:#ef4444"></span> ব্যাংক হলিডে</span>
-<span><span class="dot" style="background:#16a34a"></span> সিলেক্টেড</span>
-</div>
-
-<button class="btn" onclick="clearSelected()">❌ সিলেকশন ক্লিয়ার করো</button>
-
-<div class="holidayList">
-<b>🏦 এই মাসের হলিডে:</b>
-<div id="holidayList">লোড হচ্ছে...</div>
-<div style="margin-top:10px"><b>নিজের হলিডে যোগ করো:</b>
-<div class="row"><input type="date" id="newDate"><input type="text" id="newName" placeholder="যেমন: স্থানীয় ছুটি"></div>
-<button class="btn" style="background:#ea580c" onclick="addHoliday()">+ হলিডে যোগ করো</button>
-</div>
-</div>
-<p style="text-align:center;font-size:12px;color:#94a3b8">চাঁদ দেখে ঈদের তারিখ বদলালে এখান থেকে ঠিক করে নিও। ডেটা ফোনেই সেভ থাকে।</p>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-let holidays = {
-"2026-02-04":"শবে বরাত","2026-02-21":"ভাষা দিবস","2026-03-17":"শবে কদর",
-"2026-03-19":"ঈদ ছুটি","2026-03-20":"ঈদ ছুটি","2026-03-21":"ঈদ ছুটি","2026-03-22":"ঈদুল ফিতর (রবি)","2026-03-23":"ঈদ ছুটি",
-"2026-03-26":"স্বাধীনতা দিবস","2026-04-13":"চৈত্র সংক্রান্তি","2026-04-14":"পহেলা বৈশাখ",
-"2026-05-01":"মে দিবস","2026-05-26":"ঈদ ছুটি","2026-05-27":"ঈদুল আযহা (বুধ)","2026-05-28":"ঈদ ছুটি","2026-05-29":"ঈদ ছুটি","2026-05-30":"ঈদ ছুটি","2026-05-31":"ঈদ ছুটি (রবি)",
-"2026-06-26":"আশুরা","2026-07-01":"ব্যাংক হলিডে (বুধ)","2026-08-05":"জুলাই গণঅভ্যুত্থান (বুধ)","2026-08-26":"ঈদে মিলাদুন্নবী (বুধ)",
-"2026-09-04":"জন্মাষ্টমী","2026-10-20":"দুর্গাপূজা","2026-10-21":"বিজয়া দশমী (বুধ)","2026-12-16":"বিজয় দিবস (বুধ)","2026-12-25":"বড়দিন","2026-12-31":"ব্যাংক হলিডে",
-"2027-01-24":"শবে বরাত (রবি)","2027-02-21":"ভাষা দিবস (রবি)","2027-03-05":"জুমাতুল বিদা","2027-03-07":"শবে কদর (রবি)",
-"2027-03-08":"ঈদ ছুটি","2027-03-09":"ঈদ ছুটি","2027-03-10":"ঈদুল ফিতর (বুধ)","2027-03-11":"ঈদ ছুটি","2027-03-12":"ঈদ ছুটি",
-"2027-03-26":"স্বাধীনতা দিবস","2027-04-14":"পহেলা বৈশাখ (বুধ)","2027-05-01":"মে দিবস",
-"2027-05-15":"ঈদ ছুটি","2027-05-16":"ঈদ ছুটি (রবি)","2027-05-17":"ঈদুল আযহা","2027-05-18":"ঈদ ছুটি","2027-05-19":"ঈদ ছুটি (বুধ)","2027-05-20":"বুদ্ধ পূর্ণিমা",
-"2027-06-16":"আশুরা (বুধ)","2027-07-01":"ব্যাংক হলিডে","2027-08-05":"জুলাই গণঅভ্যুত্থান","2027-08-15":"ঈদে মিলাদুন্নবী (রবি)",
-"2027-08-25":"জন্মাষ্টমী (বুধ)","2027-10-09":"দুর্গাপূজা নবমী","2027-10-10":"বিজয়া দশমী (রবি)","2027-12-16":"বিজয় দিবস","2027-12-25":"বড়দিন","2027-12-31":"ব্যাংক হলিডে"
-};
-let custom = JSON.parse(localStorage.getItem('kisti_custom')||'{}');
-holidays = {...holidays, ...custom};
+  const SUNDAY_AMOUNT = 1000;
 
-let today = new Date();
-let curYear = 2026, curMonth = 11; // Dec 2026 default - karon ekhon Dec er kisti cholche
-let selected = new Set();
-let monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-let monthNamesBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+  // Date-based Wednesday rate: up to 2026-12-02 is 850 Tk; after 2026-12-02 is 600 Tk
+  function getWednesdayAmount(year, month, day) {
+    if (year < 2026) return 850;
+    if (year > 2026) return 600;
+    if (month < 11) return 850;
+    if (month === 11 && day <= 2) return 850;
+    return 600;
+  }
 
-let monthSel = document.getElementById('monthSel');
-monthNames.forEach((m,i)=>{ let o=document.createElement('option'); o.value=i; o.textContent=m; monthSel.appendChild(o); });
+  function getKistiAmount(year, month, day, dow) {
+    if (dow === 0) return SUNDAY_AMOUNT;
+    if (dow === 3) return getWednesdayAmount(year, month, day);
+    return 0;
+  }
 
-function key(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
-function getAmount(date){
-  let k = key(date.getFullYear(), date.getMonth(), date.getDate());
-  if(holidays[k]) return 0;
-  if(date.getDay()===0) return 1000;
-  if(date.getDay()===3){
-    let changeDate = new Date(2026, 11, 2);
-    if(date >= changeDate) return 600;
-    else return 850;
+  const MONTHS_BN = [
+    "জানুয়ারি (January)", "ফেব্রুয়ারি (February)", "মার্চ (March)",
+    "এপ্রিল (April)", "মে (May)", "জুন (June)",
+    "জুলাই (July)", "আগস্ট (August)", "সেপ্টেম্বর (September)",
+    "অক্টোবর (October)", "নভেম্বর (November)", "ডিসেম্বর (December)"
+  ];
+
+  // Official Bangladesh Govt & Bank Holidays (2026 & 2027)
+  const DEFAULT_HOLIDAYS = {
+    // 2026
+    "2026-02-04": "শব-ই-বরাত",
+    "2026-02-21": "শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস",
+    "2026-03-17": "শব-ই-কদর",
+    "2026-03-19": "ঈদুল ফিতর ছুটি",
+    "2026-03-20": "ঈদুল ফিতর ছুটি",
+    "2026-03-21": "ঈদুল ফিতর",
+    "2026-03-22": "ঈদুল ফিতর ছুটি",
+    "2026-03-23": "ঈদুল ফিতর ছুটি",
+    "2026-03-26": "স্বাধীনতা ও জাতীয় দিবস",
+    "2026-04-14": "পহেলা বৈশাখ",
+    "2026-05-01": "মে দিবস ও বুদ্ধ পূর্ণিমা",
+    "2026-05-26": "ঈদুল আযহা ছুটি",
+    "2026-05-27": "ঈদুল আযহা ছুটি",
+    "2026-05-28": "ঈদুল আযহা",
+    "2026-05-29": "ঈদুল আযহা ছুটি",
+    "2026-05-30": "ঈদুল আযহা ছুটি",
+    "2026-05-31": "ঈদুল আযহা ছুটি",
+    "2026-06-26": "আশুরা",
+    "2026-07-01": "ব্যাংক হলিডে (অর্ধবার্ষিক সমাপনী)",
+    "2026-08-05": "জুলাই গণঅভ্যুত্থান দিবস",
+    "2026-08-25": "ঈদে মিলাদুন্নবী",
+    "2026-09-03": "জন্মাষ্টমী",
+    "2026-10-20": "দুর্গাপূজা (নবমী)",
+    "2026-10-21": "বিজয়া দশমী",
+    "2026-10-22": "দুর্গাপূজা ছুটি",
+    "2026-11-07": "জাতীয় বিপ্লব ও সংহতি দিবস",
+    "2026-12-16": "বিজয় দিবস",
+    "2026-12-25": "বড়দিন",
+    "2026-12-31": "ব্যাংক হলিডে (বার্ষিক সমাপনী)",
+
+    // 2027 (Official Bangladesh Public & Bank Holidays)
+    "2027-01-24": "শব-ই-বরাত",
+    "2027-02-21": "শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস",
+    "2027-03-05": "জুমাতুল বিদা",
+    "2027-03-07": "শব-ই-কদর",
+    "2027-03-08": "ঈদুল ফিতর ছুটি",
+    "2027-03-09": "ঈদুল ফিতর ছুটি",
+    "2027-03-10": "ঈদুল ফিতর",
+    "2027-03-11": "ঈদুল ফিতর ছুটি",
+    "2027-03-12": "ঈদুল ফিতর ছুটি",
+    "2027-03-26": "স্বাধীনতা ও জাতীয় দিবস",
+    "2027-04-14": "পহেলা বৈশাখ",
+    "2027-05-01": "মে দিবস",
+    "2027-05-15": "ঈদুল আযহা ছুটি",
+    "2027-05-16": "ঈদুল আযহা ছুটি",
+    "2027-05-17": "ঈদুল আযহা",
+    "2027-05-18": "ঈদুল আযহা ছুটি",
+    "2027-05-19": "ঈদুল আযহা ছুটি",
+    "2027-05-20": "বুদ্ধ পূর্ণিমা / ঈদুল আযহা ছুটি",
+    "2027-06-16": "আশুরা",
+    "2027-07-01": "ব্যাংক হলিডে (অর্ধবার্ষিক সমাপনী)",
+    "2027-08-05": "জুলাই গণঅভ্যুত্থান দিবস",
+    "2027-08-15": "ঈদে মিলাদুন্নবী",
+    "2027-08-25": "জন্মাষ্টমী",
+    "2027-10-09": "দুর্গাপূজা (নবমী)",
+    "2027-10-10": "বিজয়া দশমী",
+    "2027-11-07": "জাতীয় বিপ্লব ও সংহতি দিবস",
+    "2027-12-16": "বিজয় দিবস",
+    "2027-12-25": "বড়দিন",
+    "2027-12-31": "ব্যাংক হলিডে (বার্ষিক সমাপনী)"
+  };
+
+  const STORAGE_SELECTED_KEY = "eshan_kisti_selected_v4";
+  const STORAGE_HOLIDAYS_KEY = "eshan_kisti_holidays_v4";
+
+  let selectedDates = JSON.parse(localStorage.getItem(STORAGE_SELECTED_KEY) || "{}");
+  let holidaysMap = JSON.parse(localStorage.getItem(STORAGE_HOLIDAYS_KEY) || "null");
+
+  if (!holidaysMap) {
+    holidaysMap = { ...DEFAULT_HOLIDAYS };
+    localStorage.setItem(STORAGE_HOLIDAYS_KEY, JSON.stringify(holidaysMap));
   }
-  return 0;
-}
-function getAmountWithoutHoliday(date){
-  if(date.getDay()===0) return 1000;
-  if(date.getDay()===3){
-    let changeDate = new Date(2026, 11, 2);
-    if(date >= changeDate) return 600;
-    else return 850;
+
+  const now = new Date();
+  let currentYear = now.getFullYear();
+  let currentMonth = now.getMonth();
+  if (currentYear < 2026 || currentYear > 2027) {
+    currentYear = 2027;
+    currentMonth = 0;
   }
-  return 0;
-}
-function render(){
-  document.getElementById('title').textContent = monthNames[curMonth]+" "+curYear;
-  document.getElementById('monthSel').value = curMonth;
-  document.getElementById('yearSel').value = curYear;
-  let weeks = ["রবি","সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি"];
-  document.getElementById('weekRow').innerHTML = weeks.map(w=>`<div class="dayName">${w}</div>`).join('');
-  let first = new Date(curYear, curMonth, 1);
-  let daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
-  let startDay = first.getDay();
-  let html = "";
-  for(let i=0;i<startDay;i++) html += `<div></div>`;
-  let monthTotal=0, sunCount=0, wedCount=0, holidayKistiSkipped=0;
-  let hList=[];
-  for(let d=1; d<=daysInMonth; d++){
-    let date = new Date(curYear, curMonth, d);
-    let k = key(curYear, curMonth, d);
-    let amt = getAmount(date);
-    let isHol = !!holidays[k];
-    let isSun = date.getDay()===0, isWed = date.getDay()===3;
-    if(isHol && (isSun||isWed)) holidayKistiSkipped += getAmountWithoutHoliday(date);
-    if(amt>0){ monthTotal+=amt; if(isSun) sunCount++; if(isWed) wedCount++; }
-    if(isHol) hList.push(`${d} ${monthNamesBn[curMonth]} - ${holidays[k]}`);
-    let cls = "day";
-    if(isSun) cls+=" sun"; if(isWed) cls+=" wed"; if(isHol) cls+=" holiday";
-    if(selected.has(k)) cls+=" selected";
-    if(k===key(today.getFullYear(),today.getMonth(),today.getDate())) cls+=" today";
-    let label = isHol ? "ছুটি" : amt>0 ? amt+"৳" : "";
-    html += `<div class="${cls}" onclick="toggleDate('${k}')"><b>${d}</b><small>${label}</small><small>${isHol?holidays[k]:''}</small></div>`;
+
+  let isEditMode = false;
+
+  function toBnNum(num) {
+    const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toLocaleString('en-US').replace(/\d/g, d => bnDigits[d]);
   }
-  document.getElementById('cal').innerHTML = html;
-  document.getElementById('monthTotal').textContent = monthTotal.toLocaleString('en-IN')+"৳";
-  document.getElementById('monthLabel').textContent = monthNamesBn[curMonth]+" "+curYear+" এ মোট লাগবে";
-  document.getElementById('monthDetail').textContent = `${sunCount}টা রবি + ${wedCount}টা বুধ • ${holidayKistiSkipped>0? holidayKistiSkipped+"৳ ছুটিতে বাঁচলো":'কোনো কিস্তি ছুটিতে পড়ে নাই'}`;
-  document.getElementById('holidayList').innerHTML = hList.length? hList.join('<br>') : "এই মাসে কোনো ব্যাংক হলিডে নাই।";
-  let selTotal=0, selList=[];
-  selected.forEach(k=>{
-    let [y,m,d]=k.split('-').map(Number);
-    let amt = getAmount(new Date(y,m-1,d));
-    if(amt>0){ selTotal+=amt; selList.push(`${d} তারিখ ${amt}৳`); }
-  });
-  document.getElementById('selectedTotal').textContent = selTotal.toLocaleString('en-IN')+"৳";
-  document.getElementById('selectedDetail').textContent = selList.length? selList.join(' + ') : "কোনো তারিখ সিলেক্ট করো নাই";
-}
-function toggleDate(k){
-  let [y,m,d]=k.split('-').map(Number);
-  let amt = getAmount(new Date(y,m-1,d));
-  if(holidays[k]){ alert("এইদিন ব্যাংক হলিডে, কিস্তি OFF"); return; }
-  if(amt===0){ alert("এইদিন কিস্তি নাই। শুধু রবি/বুধবার"); return; }
-  if(selected.has(k)) selected.delete(k); else selected.add(k);
-  render();
-}
-function clearSelected(){ selected.clear(); render(); }
-function changeMonth(n){ curMonth+=n; if(curMonth<0){curMonth=11;curYear--;} if(curMonth>11){curMonth=0;curYear++;} if(curYear<2026)curYear=2026; if(curYear>2027)curYear=2027; render(); }
-function setYear(v){ curYear=Number(v); render(); }
-function setMonth(v){ curMonth=Number(v); render(); }
-function addHoliday(){
-  let d = document.getElementById('newDate').value;
-  let n = document.getElementById('newName').value || "নিজের ছুটি";
-  if(!d){ alert("তারিখ দাও"); return; }
-  custom[d]=n; localStorage.setItem('kisti_custom', JSON.stringify(custom));
-  holidays[d]=n; alert("হলিডে যোগ হইছে"); render();
-}
-render();
+
+  function formatDateKey(year, month, day) {
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${year}-${m}-${d}`;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  function initSelectors() {
+    const mSel = document.getElementById("monthSelect");
+    const ySel = document.getElementById("yearSelect");
+
+    MONTHS_BN.forEach((name, idx) => {
+      const opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = name;
+      mSel.appendChild(opt);
+    });
+
+    [2026, 2027].forEach(yr => {
+      const opt = document.createElement("option");
+      opt.value = yr;
+      opt.textContent = toBnNum(yr).replace(/,/g, '');
+      ySel.appendChild(opt);
+    });
+  }
+
+  function syncSelectors() {
+    document.getElementById("monthSelect").value = currentMonth;
+    document.getElementById("yearSelect").value = currentYear;
+  }
+
+  function jumpTo(yr, mo) {
+    currentYear = yr;
+    currentMonth = mo;
+    syncSelectors();
+    renderCalendar();
+    showToast(`${MONTHS_BN[mo]} ${toBnNum(yr).replace(/,/g, '')}`);
+  }
+
+  function onSelectChange() {
+    currentMonth = parseInt(document.getElementById("monthSelect").value, 10);
+    currentYear = parseInt(document.getElementById("yearSelect").value, 10);
+    renderCalendar();
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    } else if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    if (currentYear < 2026) { currentYear = 2026; currentMonth = 0; }
+    if (currentYear > 2027) { currentYear = 2027; currentMonth = 11; }
+    syncSelectors();
+    renderCalendar();
+  }
+
+  function toggleEditMode() {
+    isEditMode = document.getElementById("holidayEditToggle").checked;
+    const banner = document.getElementById("editBanner");
+    if (isEditMode) {
+      banner.classList.add("active");
+    } else {
+      banner.classList.remove("active");
+    }
+  }
+
+  function resetCustomHolidays() {
+    if (confirm("সব কাস্টম ছুটি রিসেট করে ২০২৬-২০২৭ এর অফিশিয়াল ব্যাংক ছুটির তালিকা ফিরিয়ে আনবেন?")) {
+      holidaysMap = { ...DEFAULT_HOLIDAYS };
+      localStorage.setItem(STORAGE_HOLIDAYS_KEY, JSON.stringify(holidaysMap));
+      renderCalendar();
+      showToast("অফিশিয়াল ছুটির তালিকা রিসেট হয়েছে");
+    }
+  }
+
+  function clearMonthSelection() {
+    const prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
+    Object.keys(selectedDates).forEach(k => {
+      if (k.startsWith(prefix)) {
+        delete selectedDates[k];
+      }
+    });
+    localStorage.setItem(STORAGE_SELECTED_KEY, JSON.stringify(selectedDates));
+    renderCalendar();
+    showToast("এই মাসের সিলেকশন মুছে ফেলা হয়েছে");
+  }
+
+  function handleDayClick(dateKey, dayOfWeek, dayNum) {
+    if (isEditMode) {
+      if (holidaysMap[dateKey]) {
+        const oldName = holidaysMap[dateKey];
+        delete holidaysMap[dateKey];
+        localStorage.setItem(STORAGE_HOLIDAYS_KEY, JSON.stringify(holidaysMap));
+        renderCalendar();
+        showToast(`ছুটি বাতিল: ${toBnNum(dayNum)} তারিখ (${oldName})`);
+      } else {
+        const customName = prompt("ছুটির নাম লিখুন (যেমন: ব্যাংক হলিডে / ঈদের ছুটি):", "ব্যাংক ছুটি");
+        if (customName !== null) {
+          holidaysMap[dateKey] = customName.trim() || "ব্যাংক ছুটি";
+          delete selectedDates[dateKey];
+          localStorage.setItem(STORAGE_HOLIDAYS_KEY, JSON.stringify(holidaysMap));
+          localStorage.setItem(STORAGE_SELECTED_KEY, JSON.stringify(selectedDates));
+          renderCalendar();
+          showToast(`ব্যাংক ছুটি যোগ হয়েছে: ${holidaysMap[dateKey]}`);
+        }
+      }
+      return;
+    }
+
+    if (holidaysMap[dateKey]) {
+      showToast(`🚫 ${holidaysMap[dateKey]} — ব্যাংক ছুটিতে কিস্তি বন্ধ`);
+      return;
+    }
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 3) {
+      const wedRate = getWednesdayAmount(currentYear, currentMonth, dayNum);
+      showToast(`শুধুমাত্র রবিবার (১,০০০৳) ও বুধবার (${toBnNum(wedRate)}৳) কিস্তির দিন`);
+      return;
+    }
+
+    if (selectedDates[dateKey]) {
+      delete selectedDates[dateKey];
+    } else {
+      selectedDates[dateKey] = true;
+    }
+    localStorage.setItem(STORAGE_SELECTED_KEY, JSON.stringify(selectedDates));
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const tbody = document.getElementById("calendarBody");
+    tbody.innerHTML = "";
+
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const todayKey = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let tappedSum = 0;
+    let tappedCount = 0;
+
+    let activeSunCount = 0;
+    let activeSunTotal = 0;
+    let activeWedCount = 0;
+    let activeWedTotal = 0;
+    let skippedKistiCount = 0;
+    let monthHolidays = [];
+
+    let currentRow = document.createElement("tr");
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      const td = document.createElement("td");
+      td.innerHTML = `<div class="day-cell empty"></div>`;
+      currentRow.appendChild(td);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(currentYear, currentMonth, day);
+      const dow = dateObj.getDay();
+
+      if (dow === 0 && day !== 1) {
+        tbody.appendChild(currentRow);
+        currentRow = document.createElement("tr");
+      }
+
+      const dateKey = formatDateKey(currentYear, currentMonth, day);
+      const holidayName = holidaysMap[dateKey];
+
+      const isSunday = dow === 0;
+      const isWednesday = dow === 3;
+      const kistiAmount = getKistiAmount(currentYear, currentMonth, day, dow);
+
+      if (holidayName) {
+        monthHolidays.push({
+          day,
+          dow,
+          name: holidayName,
+          kistiAmount
+        });
+        if (kistiAmount > 0) {
+          skippedKistiCount++;
+          if (selectedDates[dateKey]) {
+            delete selectedDates[dateKey];
+          }
+        }
+      } else {
+        if (isSunday) {
+          activeSunCount++;
+          activeSunTotal += kistiAmount;
+        }
+        if (isWednesday) {
+          activeWedCount++;
+          activeWedTotal += kistiAmount;
+        }
+      }
+
+      const isSelected = !holidayName && kistiAmount > 0 && Boolean(selectedDates[dateKey]);
+      if (isSelected) {
+        tappedSum += kistiAmount;
+        tappedCount++;
+      }
+
+      const td = document.createElement("td");
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (dateKey === todayKey) cell.classList.add("today");
+
+      if (holidayName) {
+        cell.classList.add("holiday");
+      } else if (isSunday) {
+        cell.classList.add("kisti-sun");
+      } else if (isWednesday) {
+        cell.classList.add("kisti-wed");
+      }
+
+      if (isSelected) {
+        cell.classList.add("selected");
+      }
+
+      let innerHTML = `<span class="day-num">${toBnNum(day)}</span>`;
+
+      if (isSelected) {
+        innerHTML += `<span class="check-badge">✓</span>`;
+      }
+
+      if (holidayName) {
+        if (kistiAmount > 0) {
+          innerHTML += `<span class="off-badge">OFF</span>`;
+        }
+        innerHTML += `<span class="holiday-tag" title="${holidayName}">${holidayName}</span>`;
+      } else if (kistiAmount > 0) {
+        innerHTML += `<span class="kisti-tag">${toBnNum(kistiAmount)}৳</span>`;
+      }
+
+      cell.innerHTML = innerHTML;
+      cell.onclick = () => handleDayClick(dateKey, dow, day);
+      td.appendChild(cell);
+      currentRow.appendChild(td);
+    }
+
+    const remainingCells = 7 - currentRow.children.length;
+    if (remainingCells < 7) {
+      for (let i = 0; i < remainingCells; i++) {
+        const td = document.createElement("td");
+        td.innerHTML = `<div class="day-cell empty"></div>`;
+        currentRow.appendChild(td);
+      }
+      tbody.appendChild(currentRow);
+    }
+
+    const monthlyRequired = activeSunTotal + activeWedTotal;
+    const totalActiveKisti = activeSunCount + activeWedCount;
+
+    document.getElementById("tappedTotal").textContent = `${toBnNum(tappedSum)} ৳`;
+    document.getElementById("tappedCount").textContent = `${toBnNum(tappedCount)}টি কিস্তি সিলেক্টেড`;
+
+    document.getElementById("monthlyTotal").textContent = `${toBnNum(monthlyRequired)} ৳`;
+    document.getElementById("monthlyCount").textContent = `ছুটি বাদে মোট ${toBnNum(totalActiveKisti)}টি কিস্তি`;
+
+    document.getElementById("monthlyBreakdown").innerHTML = `
+      <span>রবি: <b>${toBnNum(activeSunCount)}টি</b> (${toBnNum(activeSunTotal)}৳) + বুধ: <b>${toBnNum(activeWedCount)}টি</b> (${toBnNum(activeWedTotal)}৳)</span>
+      <span class="badge-pill">ছুটিতে কিস্তি বন্ধ: ${toBnNum(skippedKistiCount)}টি</span>
+    `;
+
+    const hContainer = document.getElementById("holidayListContainer");
+    document.getElementById("holidayCountBadge").textContent = `${toBnNum(monthHolidays.length)}টি`;
+
+    if (monthHolidays.length === 0) {
+      hContainer.innerHTML = `<div style="font-size:0.75rem;color:#64748b;text-align:center;padding:6px;">এই মাসে কোনো ব্যাংক ছুটি নেই।</div>`;
+    } else {
+      const dayNames = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+      hContainer.innerHTML = monthHolidays.map(h => {
+        const impactText = h.kistiAmount > 0
+          ? `${dayNames[h.dow]} • ${toBnNum(h.kistiAmount)}৳ বন্ধ`
+          : `${dayNames[h.dow]}`;
+        return `
+          <div class="holiday-item">
+            <span><b>${toBnNum(h.day)} তারিখ:</b> ${h.name}</span>
+            <span class="holiday-impact">${impactText}</span>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  initSelectors();
+  syncSelectors();
+  renderCalendar();
 </script>
 </body>
 </html>
