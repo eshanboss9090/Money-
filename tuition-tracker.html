@@ -778,4 +778,319 @@
     }
 
     function removeDate(stId, dateStr) {
-      const m
+      const mKey = dateStr.slice(0, 7);
+      const list = getStudentDates(mKey, stId);
+      state.attendance[mKey][stId] = list.filter(d => d !== dateStr);
+      persist();
+      renderAll();
+    }
+
+    function saveFeePayment(stId) {
+      const mKey = getMonthKey();
+      const val = parseFloat(document.getElementById("feeInp_" + stId).value);
+      if (isNaN(val) || val < 0) {
+        alert("সঠিক টাকার পরিমাণ লিখুন!");
+        return;
+      }
+      if (!state.payments[mKey]) state.payments[mKey] = {};
+      state.payments[mKey][stId] = val;
+      persist();
+      renderAll();
+    }
+
+    function markFullPaid(stId, fullFee) {
+      const mKey = getMonthKey();
+      if (!state.payments[mKey]) state.payments[mKey] = {};
+      state.payments[mKey][stId] = fullFee;
+      persist();
+      renderAll();
+    }
+
+    function getThisWeekCount(dates) {
+      const curr = new Date();
+      const dayOfWeek = curr.getDay();
+      const diffToSat = (dayOfWeek + 1) % 7;
+      const sat = new Date(curr);
+      sat.setDate(curr.getDate() - diffToSat);
+      sat.setHours(0, 0, 0, 0);
+
+      const fri = new Date(sat);
+      fri.setDate(sat.getDate() + 6);
+      fri.setHours(23, 59, 59, 999);
+
+      return dates.filter(dStr => {
+        const d = new Date(dStr + "T12:00:00");
+        return d >= sat && d <= fri;
+      }).length;
+    }
+
+    function getPaydayStatus(st, due, mKey) {
+      if (!st.payDay || st.payDay === 0) {
+        return { label: "🗓 তারিখ সেট নেই", cls: "chip pay-date", cardCls: "" };
+      }
+      if (due === 0 && st.fee > 0) {
+        return { label: `🗓 বেতনের তারিখ: ${st.payDay} তারিখ (পেইড)`, cls: "chip pay-date", cardCls: "" };
+      }
+      if (mKey === currentMonthKey) {
+        const diff = st.payDay - todayDayNum;
+        if (diff < 0) {
+          return { label: `🚨 ${st.payDay} তারিখ পার হয়েছে (${Math.abs(diff)} দিন ওভারডিউ)`, cls: "chip pay-overdue", cardCls: "overdue" };
+        } else if (diff === 0) {
+          return { label: `🔔 আজকেই বেতনের তারিখ (${st.payDay} তারিখ)`, cls: "chip pay-today", cardCls: "due-soon" };
+        } else if (diff <= 4) {
+          return { label: `⏳ আর ${diff} দিন পর বেতন (${st.payDay} তারিখ)`, cls: "chip pay-today", cardCls: "due-soon" };
+        }
+      }
+      return { label: `🗓 বেতনের তারিখ: প্রতি মাসের ${st.payDay} তারিখ`, cls: "chip pay-date", cardCls: "" };
+    }
+
+    function renderStudents() {
+      const mKey = getMonthKey();
+      const box = document.getElementById("studentList");
+
+      let totalPaid = 0;
+      let totalDue = 0;
+      let totalClasses = 0;
+      const upcomingPayList = [];
+
+      const sortedStudents = [...state.students].sort((a, b) => {
+        const pa = a.payDay || 99;
+        const pb = b.payDay || 99;
+        return pa - pb;
+      });
+
+      if (sortedStudents.length === 0) {
+        box.innerHTML = `<div class="empty">এখনো কোনো স্টুডেন্ট যোগ করা হয়নি। ওপরের ফর্ম থেকে প্রথম স্টুডেন্ট যোগ করুন।</div>`;
+      } else {
+        box.innerHTML = sortedStudents.map(st => {
+          const dates = getStudentDates(mKey, st.id);
+          const paid = getStudentPaid(mKey, st.id);
+          const due = Math.max(0, st.fee - paid);
+          const weekCount = getThisWeekCount(dates);
+          const payStatus = getPaydayStatus(st, due, mKey);
+
+          totalPaid += paid;
+          totalDue += due;
+          totalClasses += dates.length;
+
+          if (due > 0 && st.payDay > 0) {
+            upcomingPayList.push(`${st.name} (${st.payDay} তারিখ — ${due}৳)`);
+          }
+
+          let feeChip = "";
+          if (st.fee === 0) {
+            feeChip = `<span class="chip">বেতন সেট নেই</span>`;
+          } else if (due === 0) {
+            feeChip = `<span class="chip paid">✔ পরিশোধিত (${paid}৳)</span>`;
+          } else if (paid > 0) {
+            feeChip = `<span class="chip partial">আংশিক: ${paid}৳ | বাকি: ${due}৳</span>`;
+          } else {
+            feeChip = `<span class="chip due">বকেয়া: ${due}৳</span>`;
+          }
+
+          const chipsHtml = dates.length > 0
+            ? dates.map(d => {
+                const dayNum = d.split("-")[2];
+                return `<span class="d-chip" onclick="removeDate('${st.id}', '${d}')" title="মুছতে ট্যাপ করুন">${dayNum} তারিখ <span>✕</span></span>`;
+              }).join("")
+            : `<span style="font-size:0.72rem; color:#64748b;">এই মাসে এখনো কোনো ক্লাস মার্ক করা হয়নি</span>`;
+
+          return `
+            <div class="student-card ${payStatus.cardCls}">
+              <div class="st-top">
+                <div>
+                  <span class="st-name">${st.name}</span>
+                  <span class="st-meta">${st.cls} • ${st.schedule}</span>
+                </div>
+                <span style="font-size:0.86rem; font-weight:900; color:#0f172a;">${st.fee}৳/মাস</span>
+              </div>
+
+              <div class="st-badges">
+                <span class="${payStatus.cls}">${payStatus.label}</span>
+                ${feeChip}
+                <span class="chip primary">মাসে: ${dates.length} দিন</span>
+                <span class="chip">সপ্তাহে: ${weekCount} দিন</span>
+              </div>
+
+              <div class="att-box">
+                <div class="att-head">
+                  <span>পড়ানোর তারিখসমূহ (মুছতে তারিখে ট্যাপ):</span>
+                  <span style="color:#0f766e; cursor:pointer;" onclick="togglePanel('datePanel_${st.id}')">+ অন্য তারিখ</span>
+                </div>
+                <div class="date-chips">${chipsHtml}</div>
+
+                <div class="inline-panel" id="datePanel_${st.id}">
+                  <div class="inline-row" style="margin-bottom:0;">
+                    <input type="date" id="dateInp_${st.id}" class="field" style="padding:6px 8px; font-size:0.78rem;" value="${todayStr}" />
+                    <button type="button" class="act-btn act-att" style="padding:6px 12px;" onclick="addCustomDate('${st.id}')">যোগ করুন</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="st-actions">
+                <button type="button" class="act-btn act-att" onclick="markTodayClass('${st.id}')">✔ আজ পড়িয়েছি</button>
+                <button type="button" class="act-btn act-fee" onclick="togglePanel('feePanel_${st.id}')">💰 বেতন আপডেট</button>
+                <button type="button" class="act-btn act-edit" onclick="togglePanel('editPanel_${st.id}')" title="তারিখ/বেতন এডিট">⚙️</button>
+                <button type="button" class="act-btn act-del" onclick="deleteStudent('${st.id}')">✕</button>
+              </div>
+
+              <div class="inline-panel" id="feePanel_${st.id}">
+                <div class="inline-row" style="margin-bottom:0;">
+                  <input type="number" id="feeInp_${st.id}" class="field" style="padding:6px 8px; font-size:0.8rem;" placeholder="কত টাকা পেয়েছেন?" value="${paid || ""}" />
+                  <button type="button" class="act-btn act-fee" style="padding:6px 10px;" onclick="saveFeePayment('${st.id}')">সেভ</button>
+                  <button type="button" class="act-btn" style="background:#16a34a; color:#fff; padding:6px 10px;" onclick="markFullPaid('${st.id}', ${st.fee})">ফুল পেইড</button>
+                </div>
+              </div>
+
+              <div class="inline-panel" id="editPanel_${st.id}">
+                <div class="form-grid" style="margin-bottom:6px;">
+                  <input type="number" id="editFee_${st.id}" class="field" style="padding:6px 8px; font-size:0.78rem;" value="${st.fee}" placeholder="মাসিক বেতন" />
+                  <select id="editPayDay_${st.id}" class="field" style="padding:6px 8px; font-size:0.78rem;">
+                    ${buildPayDayOptions(st.payDay || 0)}
+                  </select>
+                </div>
+                <div class="inline-row" style="margin-bottom:0;">
+                  <input type="text" id="editSch_${st.id}" class="field" style="padding:6px 8px; font-size:0.78rem;" value="${st.schedule}" placeholder="রুটিন" />
+                  <button type="button" class="act-btn" style="background:#0f172a; color:#fff; padding:6px 12px;" onclick="updateStudentDetails('${st.id}')">আপডেট</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      const alertBox = document.getElementById("paydayAlert");
+      if (upcomingPayList.length > 0) {
+        alertBox.innerHTML = `📅 এই মাসে বকেয়া বেতনের তালিকা (তারিখ অনুযায়ী):<br><span style="font-weight:700;">${upcomingPayList.join(" • ")}</span>`;
+      } else if (state.students.length > 0) {
+        alertBox.innerHTML = `🎉 এই মাসের সব নির্ধারিত বেতন পরিশোধ হয়ে গেছে!`;
+      } else {
+        alertBox.innerHTML = `💰 স্টুডেন্ট যোগ করার সময় বেতন পাওয়ার নির্দিষ্ট তারিখ সিলেক্ট করলে এখানে তারিখ অনুযায়ী লিস্ট দেখাবে।`;
+      }
+
+      document.getElementById("sumPaid").textContent = totalPaid.toLocaleString("en-IN") + "৳";
+      document.getElementById("sumDue").textContent = totalDue.toLocaleString("en-IN") + "৳";
+      document.getElementById("sumClasses").textContent = totalClasses + " দিন";
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById("calendarGrid");
+      const mKey = getMonthKey();
+      const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
+
+      const dayNames = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহঃ", "শুক্র", "শনি"];
+      let html = dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join("");
+
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="cal-cell empty-cell"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${mKey}-${String(d).padStart(2, "0")}`;
+        const taughtStudents = state.students.filter(st => getStudentDates(mKey, st.id).includes(dStr));
+        const paydayStudents = state.students.filter(st => st.payDay === d);
+        const isToday = dStr === todayStr;
+        const hasClass = taughtStudents.length > 0;
+        const hasPayday = paydayStudents.length > 0;
+
+        let cellCls = "cal-cell";
+        if (hasClass) cellCls += " active-day";
+        else if (hasPayday) cellCls += " payday-cell";
+        if (isToday) cellCls += " today-cell";
+
+        html += `
+          <div class="${cellCls}" onclick="showDayInfo('${dStr}', ${d})">
+            <span>${d}</span>
+            <div>
+              ${hasPayday ? `<div class="cal-pay-tag">💰 বেতন</div>` : ""}
+              ${hasClass ? `<div class="cal-dots">${taughtStudents.length} জন</div>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+      const defaultDay = selectedCalDate.startsWith(mKey) ? parseInt(selectedCalDate.split("-")[2]) : 1;
+      showDayInfo(selectedCalDate.startsWith(mKey) ? selectedCalDate : `${mKey}-01`, defaultDay);
+    }
+
+    function showDayInfo(dStr, dayNum) {
+      selectedCalDate = dStr;
+      const mKey = dStr.slice(0, 7);
+      const taught = state.students.filter(st => getStudentDates(mKey, st.id).includes(dStr));
+      const paydays = state.students.filter(st => st.payDay === dayNum);
+      const box = document.getElementById("dayDetails");
+
+      let parts = [`📌 <strong>তারিখ ${dStr}</strong>`];
+      if (paydays.length > 0) {
+        parts.push(`💰 বেতন পাওয়ার দিন: ${paydays.map(s => `${s.name} (${s.fee}৳)`).join(", ")}`);
+      }
+      if (taught.length > 0) {
+        parts.push(`📚 ক্লাস হয়েছে (${taught.length} জন): ${taught.map(s => s.name).join(", ")}`);
+      } else if (paydays.length === 0) {
+        parts.push(`এই দিনে কোনো ক্লাস বা বেতনের তারিখ নেই।`);
+      }
+      box.innerHTML = parts.join("<br>");
+    }
+
+    function copyBackup() {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+      document.getElementById("restoreInput").value = encoded;
+      const msg = document.getElementById("statusMsg");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(encoded).then(() => {
+          msg.style.color = "#15803d";
+          msg.textContent = "✔ ব্যাকআপ কোড কপি হয়েছে!";
+        });
+      }
+    }
+
+    function restoreData() {
+      const raw = document.getElementById("restoreInput").value.trim();
+      const msg = document.getElementById("statusMsg");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+        if (!parsed || !Array.isArray(parsed.students)) throw new Error();
+        state = parsed;
+        persist();
+        renderAll();
+        msg.style.color = "#15803d";
+        msg.textContent = "✔ টিউশন ডেটা সফলভাবে রিস্টোর হয়েছে!";
+      } catch (e) {
+        msg.style.color = "#dc2626";
+        msg.textContent = "❌ ব্যাকআপ কোডটি সঠিক নয়!";
+      }
+    }
+
+    function copyMonthlyReport() {
+      const mKey = getMonthKey();
+      const lines = [`📚 Tuition Report — ${bnMonths[selectedMonth]} ${selectedYear} (ESHAN)`];
+      state.students.forEach(st => {
+        const dates = getStudentDates(mKey, st.id);
+        const paid = getStudentPaid(mKey, st.id);
+        const due = Math.max(0, st.fee - paid);
+        const pDateTxt = st.payDay ? ` | বেতনের তারিখ: ${st.payDay}` : "";
+        lines.push(`• ${st.name} (${st.cls}): ক্লাস ${dates.length} দিন | আদায় ${paid}৳ | বকেয়া ${due}৳${pDateTxt}`);
+      });
+      const msg = document.getElementById("statusMsg");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(lines.join("\n")).then(() => {
+          msg.style.color = "#15803d";
+          msg.textContent = "✔ মাসিক রিপোর্ট কপি হয়েছে!";
+        });
+      }
+    }
+
+    function renderAll() {
+      document.getElementById("monthDisplay").textContent = `${bnMonths[selectedMonth]} ${selectedYear}`;
+      renderStudents();
+      if (activeTab === "calendar") renderCalendar();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
+
