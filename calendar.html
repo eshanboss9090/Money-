@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Babar Kisti Calendar</title>
+<style>
+*{box-sizing:border-box;font-family:Hind Siliguri,Arial,sans-serif}
+body{margin:0;background:#f1f5f9;padding:12px}
+.card{background:#fff;border-radius:16px;padding:14px;max-width:480px;margin:auto;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+h2{text-align:center;margin:4px 0 2px}
+.sub{text-align:center;color:#64748b;font-size:13px;margin-bottom:12px}
+.top{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border-radius:12px;padding:12px;color:#fff}
+.box small{opacity:.9}
+.box b{font-size:22px;display:block}
+.monthTotal{background:#0f172a}
+.selectedTotal{background:#16a34a}
+.nav{display:flex;justify-content:space-between;align-items:center;margin:14px 0}
+.nav button{border:0;background:#e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700}
+.nav b{font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.dayName{font-size:12px;color:#94a3b8;font-weight:700;padding:4px 0}
+.day{border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 2px;cursor:pointer;min-height:56px;position:relative;background:#fff}
+.day small{font-size:11px;display:block;line-height:1.2}
+.day.sun{border-color:#fca5a5;background:#fff1f2}
+.day.wed{border-color:#93c5fd;background:#eff6ff}
+.day.holiday{background:#fee2e2!important;border-color:#ef4444!important;opacity:.9}
+.day.holiday small{color:#dc2626;font-weight:700}
+.day.selected{background:#16a34a!important;color:#fff;border-color:#16a34a}
+.day.selected small{color:#fff}
+.day.today{outline:2px solid #000}
+.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:12px;justify-content:center}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.btn{width:100%;margin-top:12px;border:0;padding:12px;border-radius:12px;font-weight:700;background:#0f172a;color:#fff}
+.holidayList{margin-top:14px;font-size:13px;background:#fff7ed;border-radius:12px;padding:10px}
+input,select{padding:10px;border-radius:10px;border:1px solid #cbd5e1;width:100%;margin-top:6px}
+.row{display:flex;gap:8px}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>🗓️ বাবার কিস্তি ক্যালেন্ডার</h2>
+<p class="sub">রবিবার ১০০০৳ • বুধবার ৮৫০৳ • ব্যাংক ছুটিতে কিস্তি OFF</p>
+
+<div class="top">
+<div class="box monthTotal"><small id="monthLabel">এই মাসে মোট লাগবে</small><b id="monthTotal">০৳</b><small id="monthDetail"></small></div>
+<div class="box selectedTotal"><small>তুমি ট্যাপ করছো</small><b id="selectedTotal">০৳</b><small id="selectedDetail">কোনো তারিখ সিলেক্ট করো নাই</small></div>
+</div>
+
+<div class="nav">
+<button onclick="changeMonth(-1)">◀ আগের</button>
+<b id="title">January 2026</b>
+<button onclick="changeMonth(1)">পরের ▶</button>
+</div>
+
+<div class="row">
+<select id="yearSel" onchange="setYear(this.value)"><option value="2026">2026</option><option value="2027">2027</option></select>
+<select id="monthSel" onchange="setMonth(this.value)"></select>
+</div>
+
+<div class="grid" id="weekRow"></div>
+<div class="grid" id="cal"></div>
+
+<div class="legend">
+<span><span class="dot" style="background:#fecaca"></span> রবিবার ১০০০৳</span>
+<span><span class="dot" style="background:#bfdbfe"></span> বুধবার ৮৫০৳</span>
+<span><span class="dot" style="background:#ef4444"></span> ব্যাংক হলিডে</span>
+<span><span class="dot" style="background:#16a34a"></span> সিলেক্টেড</span>
+</div>
+
+<button class="btn" onclick="clearSelected()">❌ সিলেকশন ক্লিয়ার করো</button>
+
+<div class="holidayList">
+<b>🏦 এই মাসের হলিডে:</b>
+<div id="holidayList">লোড হচ্ছে...</div>
+<div style="margin-top:10px"><b>নিজের হলিডে যোগ করো:</b>
+<div class="row"><input type="date" id="newDate"><input type="text" id="newName" placeholder="যেমন: স্থানীয় ছুটি"></div>
+<button class="btn" style="background:#ea580c" onclick="addHoliday()">+ হলিডে যোগ করো</button>
+</div>
+</div>
+<p style="text-align:center;font-size:12px;color:#94a3b8">চাঁদ দেখে ঈদের তারিখ বদলালে এখান থেকে ঠিক করে নিও। ডেটা ফোনেই সেভ থাকে।</p>
+</div>
+
+<script>
+// Bangladesh Bank Holidays 2026 + Govt Gazette 2027 (Editable)
+let holidays = {
+"2026-02-04":"শবে বরাত","2026-02-21":"ভাষা দিবস","2026-03-17":"শবে কদর",
+"2026-03-19":"ঈদ ছুটি","2026-03-20":"ঈদ ছুটি","2026-03-21":"ঈদ ছুটি","2026-03-22":"ঈদুল ফিতর (রবি)","2026-03-23":"ঈদ ছুটি",
+"2026-03-26":"স্বাধীনতা দিবস","2026-04-13":"চৈত্র সংক্রান্তি","2026-04-14":"পহেলা বৈশাখ",
+"2026-05-01":"মে দিবস","2026-05-26":"ঈদ ছুটি","2026-05-27":"ঈদুল আযহা (বুধ)","2026-05-28":"ঈদ ছুটি","2026-05-29":"ঈদ ছুটি","2026-05-30":"ঈদ ছুটি","2026-05-31":"ঈদ ছুটি (রবি)",
+"2026-06-26":"আশুরা","2026-07-01":"ব্যাংক হলিডে (বুধ)","2026-08-05":"জুলাই গণঅভ্যুত্থান (বুধ)","2026-08-26":"ঈদে মিলাদুন্নবী (বুধ)",
+"2026-09-04":"জন্মাষ্টমী","2026-10-20":"দুর্গাপূজা","2026-10-21":"বিজয়া দশমী (বুধ)","2026-12-16":"বিজয় দিবস (বুধ)","2026-12-25":"বড়দিন","2026-12-31":"ব্যাংক হলিডে",
+"2027-01-24":"শবে বরাত (রবি)","2027-02-21":"ভাষা দিবস (রবি)","2027-03-05":"জুমাতুল বিদা","2027-03-07":"শবে কদর (রবি)",
+"2027-03-08":"ঈদ ছুটি","2027-03-09":"ঈদ ছুটি","2027-03-10":"ঈদুল ফিতর (বুধ)","2027-03-11":"ঈদ ছুটি","2027-03-12":"ঈদ ছুটি",
+"2027-03-26":"স্বাধীনতা দিবস","2027-04-14":"পহেলা বৈশাখ (বুধ)","2027-05-01":"মে দিবস",
+"2027-05-15":"ঈদ ছুটি","2027-05-16":"ঈদ ছুটি (রবি)","2027-05-17":"ঈদুল আযহা","2027-05-18":"ঈদ ছুটি","2027-05-19":"ঈদ ছুটি (বুধ)","2027-05-20":"বুদ্ধ পূর্ণিমা",
+"2027-06-16":"আশুরা (বুধ)","2027-07-01":"ব্যাংক হলিডে","2027-08-05":"জুলাই গণঅভ্যুত্থান","2027-08-15":"ঈদে মিলাদুন্নবী (রবি)",
+"2027-08-25":"জন্মাষ্টমী (বুধ)","2027-10-09":"দুর্গাপূজা নবমী","2027-10-10":"বিজয়া দশমী (রবি)","2027-12-16":"বিজয় দিবস","2027-12-25":"বড়দিন","2027-12-31":"ব্যাংক হলিডে"
+};
+// Load custom holidays
+let custom = JSON.parse(localStorage.getItem('kisti_custom')||'{}');
+holidays = {...holidays, ...custom};
+
+let today = new Date();
+let curYear = 2026, curMonth = 0; // Jan 2026 default
+let selected = new Set();
+let monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+let monthNamesBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+
+let monthSel = document.getElementById('monthSel');
+monthNames.forEach((m,i)=>{ let o=document.createElement('option'); o.value=i; o.textContent=m; monthSel.appendChild(o); });
+
+function key(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function getAmount(date){
+  let k = key(date.getFullYear(), date.getMonth(), date.getDate());
+  if(holidays[k]) return 0; // holiday = off
+  if(date.getDay()===0) return 1000;
+  if(date.getDay()===3) return 850;
+  return 0;
+}
+function render(){
+  document.getElementById('title').textContent = monthNames[curMonth]+" "+curYear;
+  document.getElementById('monthSel').value = curMonth;
+  document.getElementById('yearSel').value = curYear;
+  // Week row
+  let weeks = ["রবি","সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি"];
+  document.getElementById('weekRow').innerHTML = weeks.map(w=>`<div class="dayName">${w}</div>`).join('');
+  let first = new Date(curYear, curMonth, 1);
+  let daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  let startDay = first.getDay(); // 0 Sun
+  let html = "";
+  for(let i=0;i<startDay;i++) html += `<div></div>`;
+  let monthTotal=0, sunCount=0, wedCount=0, holidayKistiSkipped=0;
+  let hList=[];
+  for(let d=1; d<=daysInMonth; d++){
+    let date = new Date(curYear, curMonth, d);
+    let k = key(curYear, curMonth, d);
+    let amt = getAmount(date);
+    let isHol = !!holidays[k];
+    let isSun = date.getDay()===0, isWed = date.getDay()===3;
+    if(isHol && (isSun||isWed)) holidayKistiSkipped += (isSun?1000:850);
+    if(amt>0){ monthTotal+=amt; if(isSun) sunCount++; if(isWed) wedCount++; }
+    if(isHol) hList.push(`${d} ${monthNamesBn[curMonth]} - ${holidays[k]}`);
+    let cls = "day";
+    if(isSun) cls+=" sun"; if(isWed) cls+=" wed"; if(isHol) cls+=" holiday";
+    if(selected.has(k)) cls+=" selected";
+    if(k===key(today.getFullYear(),today.getMonth(),today.getDate())) cls+=" today";
+    let label = isHol ? "ছুটি" : amt>0 ? amt+"৳" : "";
+    html += `<div class="${cls}" onclick="toggleDate('${k}')"><b>${d}</b><small>${label}</small><small>${isHol?holidays[k]:''}</small></div>`;
+  }
+  document.getElementById('cal').innerHTML = html;
+  document.getElementById('monthTotal').textContent = monthTotal.toLocaleString('en-IN')+"৳";
+  document.getElementById('monthLabel').textContent = monthNamesBn[curMonth]+" "+curYear+" এ মোট লাগবে";
+  document.getElementById('monthDetail').textContent = `${sunCount}টা রবি + ${wedCount}টা বুধ • ${holidayKistiSkipped>0? holidayKistiSkipped+"৳ ছুটিতে বাঁচলো":'কোনো কিস্তি ছুটিতে পড়ে নাই'}`;
+  document.getElementById('holidayList').innerHTML = hList.length? hList.join('<br>') : "এই মাসে কোনো ব্যাংক হলিডে নাই।";
+  // Selected total
+  let selTotal=0, selList=[];
+  selected.forEach(k=>{
+    let [y,m,d]=k.split('-').map(Number);
+    let amt = getAmount(new Date(y,m-1,d));
+    if(amt>0){ selTotal+=amt; selList.push(`${d} তারিখ ${amt}৳`); }
+  });
+  document.getElementById('selectedTotal').textContent = selTotal.toLocaleString('en-IN')+"৳";
+  document.getElementById('selectedDetail').textContent = selList.length? selList.join(' + ') : "কোনো তারিখ সিলেক্ট করো নাই";
+}
+function toggleDate(k){
+  let [y,m,d]=k.split('-').map(Number);
+  let amt = getAmount(new Date(y,m-1,d));
+  if(holidays[k]){ alert("এইদিন ব্যাংক হলিডে, কিস্তি OFF"); return; }
+  if(amt===0){ alert("এইদিন কিস্তি নাই। শুধু রবি/বুধবার"); return; }
+  if(selected.has(k)) selected.delete(k); else selected.add(k);
+  render();
+}
+function clearSelected(){ selected.clear(); render(); }
+function changeMonth(n){ curMonth+=n; if(curMonth<0){curMonth=11;curYear--;} if(curMonth>11){curMonth=0;curYear++;} if(curYear<2026)curYear=2026; if(curYear>2027)curYear=2027; render(); }
+function setYear(v){ curYear=Number(v); render(); }
+function setMonth(v){ curMonth=Number(v); render(); }
+function addHoliday(){
+  let d = document.getElementById('newDate').value;
+  let n = document.getElementById('newName').value || "নিজের ছুটি";
+  if(!d){ alert("তারিখ দাও"); return; }
+  custom[d]=n; localStorage.setItem('kisti_custom', JSON.stringify(custom));
+  holidays[d]=n; alert("হলিডে যোগ হইছে"); render();
+}
+render();
+</script>
+</body>
+</html>
