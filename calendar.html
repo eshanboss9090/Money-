@@ -41,7 +41,7 @@ input,select{padding:10px;border-radius:10px;border:1px solid #cbd5e1;width:100%
 <body>
 <div class="card">
 <h2>🗓️ বাবার কিস্তি ক্যালেন্ডার</h2>
-<p class="sub">রবিবার ১০০০৳ • বুধবার ৮৫০৳ • ব্যাংক ছুটিতে কিস্তি OFF</p>
+<p class="sub">রবিবার ১০০০৳ • বুধবার ৮৫০৳ (২ ডিসেম্বর থেকে ৬০০৳) • ব্যাংক ছুটিতে কিস্তি OFF</p>
 
 <div class="top">
 <div class="box monthTotal"><small id="monthLabel">এই মাসে মোট লাগবে</small><b id="monthTotal">০৳</b><small id="monthDetail"></small></div>
@@ -64,7 +64,7 @@ input,select{padding:10px;border-radius:10px;border:1px solid #cbd5e1;width:100%
 
 <div class="legend">
 <span><span class="dot" style="background:#fecaca"></span> রবিবার ১০০০৳</span>
-<span><span class="dot" style="background:#bfdbfe"></span> বুধবার ৮৫০৳</span>
+<span><span class="dot" style="background:#bfdbfe"></span> বুধবার ৬০০/৮৫০৳</span>
 <span><span class="dot" style="background:#ef4444"></span> ব্যাংক হলিডে</span>
 <span><span class="dot" style="background:#16a34a"></span> সিলেক্টেড</span>
 </div>
@@ -83,7 +83,6 @@ input,select{padding:10px;border-radius:10px;border:1px solid #cbd5e1;width:100%
 </div>
 
 <script>
-// Bangladesh Bank Holidays 2026 + Govt Gazette 2027 (Editable)
 let holidays = {
 "2026-02-04":"শবে বরাত","2026-02-21":"ভাষা দিবস","2026-03-17":"শবে কদর",
 "2026-03-19":"ঈদ ছুটি","2026-03-20":"ঈদ ছুটি","2026-03-21":"ঈদ ছুটি","2026-03-22":"ঈদুল ফিতর (রবি)","2026-03-23":"ঈদ ছুটি",
@@ -98,12 +97,11 @@ let holidays = {
 "2027-06-16":"আশুরা (বুধ)","2027-07-01":"ব্যাংক হলিডে","2027-08-05":"জুলাই গণঅভ্যুত্থান","2027-08-15":"ঈদে মিলাদুন্নবী (রবি)",
 "2027-08-25":"জন্মাষ্টমী (বুধ)","2027-10-09":"দুর্গাপূজা নবমী","2027-10-10":"বিজয়া দশমী (রবি)","2027-12-16":"বিজয় দিবস","2027-12-25":"বড়দিন","2027-12-31":"ব্যাংক হলিডে"
 };
-// Load custom holidays
 let custom = JSON.parse(localStorage.getItem('kisti_custom')||'{}');
 holidays = {...holidays, ...custom};
 
 let today = new Date();
-let curYear = 2026, curMonth = 0; // Jan 2026 default
+let curYear = 2026, curMonth = 11; // Dec 2026 default - karon ekhon Dec er kisti cholche
 let selected = new Set();
 let monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 let monthNamesBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
@@ -114,21 +112,33 @@ monthNames.forEach((m,i)=>{ let o=document.createElement('option'); o.value=i; o
 function key(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function getAmount(date){
   let k = key(date.getFullYear(), date.getMonth(), date.getDate());
-  if(holidays[k]) return 0; // holiday = off
+  if(holidays[k]) return 0;
   if(date.getDay()===0) return 1000;
-  if(date.getDay()===3) return 850;
+  if(date.getDay()===3){
+    let changeDate = new Date(2026, 11, 2);
+    if(date >= changeDate) return 600;
+    else return 850;
+  }
+  return 0;
+}
+function getAmountWithoutHoliday(date){
+  if(date.getDay()===0) return 1000;
+  if(date.getDay()===3){
+    let changeDate = new Date(2026, 11, 2);
+    if(date >= changeDate) return 600;
+    else return 850;
+  }
   return 0;
 }
 function render(){
   document.getElementById('title').textContent = monthNames[curMonth]+" "+curYear;
   document.getElementById('monthSel').value = curMonth;
   document.getElementById('yearSel').value = curYear;
-  // Week row
   let weeks = ["রবি","সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি"];
   document.getElementById('weekRow').innerHTML = weeks.map(w=>`<div class="dayName">${w}</div>`).join('');
   let first = new Date(curYear, curMonth, 1);
   let daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
-  let startDay = first.getDay(); // 0 Sun
+  let startDay = first.getDay();
   let html = "";
   for(let i=0;i<startDay;i++) html += `<div></div>`;
   let monthTotal=0, sunCount=0, wedCount=0, holidayKistiSkipped=0;
@@ -139,7 +149,7 @@ function render(){
     let amt = getAmount(date);
     let isHol = !!holidays[k];
     let isSun = date.getDay()===0, isWed = date.getDay()===3;
-    if(isHol && (isSun||isWed)) holidayKistiSkipped += (isSun?1000:850);
+    if(isHol && (isSun||isWed)) holidayKistiSkipped += getAmountWithoutHoliday(date);
     if(amt>0){ monthTotal+=amt; if(isSun) sunCount++; if(isWed) wedCount++; }
     if(isHol) hList.push(`${d} ${monthNamesBn[curMonth]} - ${holidays[k]}`);
     let cls = "day";
@@ -154,7 +164,6 @@ function render(){
   document.getElementById('monthLabel').textContent = monthNamesBn[curMonth]+" "+curYear+" এ মোট লাগবে";
   document.getElementById('monthDetail').textContent = `${sunCount}টা রবি + ${wedCount}টা বুধ • ${holidayKistiSkipped>0? holidayKistiSkipped+"৳ ছুটিতে বাঁচলো":'কোনো কিস্তি ছুটিতে পড়ে নাই'}`;
   document.getElementById('holidayList').innerHTML = hList.length? hList.join('<br>') : "এই মাসে কোনো ব্যাংক হলিডে নাই।";
-  // Selected total
   let selTotal=0, selList=[];
   selected.forEach(k=>{
     let [y,m,d]=k.split('-').map(Number);
