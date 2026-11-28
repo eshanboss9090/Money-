@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>বাবার কিস্তি ক্যালেন্ডার ও হিসাব (২০২৬-২০২৭)</title>
+<title>বাবার কিস্তি ও ডিপিএস ক্যালেন্ডার (২০২৬-২০২৭)</title>
 <style>
   :root {
     --bg: #f1f5f9;
@@ -16,6 +16,9 @@
     --wed-bg: #f0fdf4;
     --wed-border: #86efac;
     --wed-text: #15803d;
+    --dps-bg: #fffbeb;
+    --dps-border: #fcd34d;
+    --dps-text: #b45309;
     --holiday-bg: #fef2f2;
     --holiday-border: #fca5a5;
     --holiday-text: #b91c1c;
@@ -51,12 +54,12 @@
     margin-bottom: 8px;
   }
   .header h1 {
-    font-size: 1.2rem;
+    font-size: 1.18rem;
     font-weight: 700;
     color: var(--primary-dark);
   }
   .header p {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     color: var(--text-muted);
   }
 
@@ -137,7 +140,7 @@
     margin-top: 8px;
     padding-top: 7px;
     border-top: 1px dashed var(--border);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     display: flex;
     justify-content: space-between;
@@ -152,7 +155,7 @@
     padding: 2px 7px;
     border-radius: 999px;
     font-weight: 700;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
   }
 
   .nav-bar {
@@ -336,11 +339,11 @@
 
   .day-cell {
     width: 100%;
-    height: 72px;
+    height: 76px;
     border-radius: 10px;
     border: 1.5px solid #e2e8f0;
     background: #ffffff;
-    padding: 5px 1px;
+    padding: 4px 1px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -392,6 +395,25 @@
     color: var(--wed-text);
   }
 
+  .day-cell.kisti-dps {
+    background: var(--dps-bg);
+    border-color: var(--dps-border);
+  }
+  .day-cell.kisti-dps .day-num {
+    color: var(--dps-text);
+  }
+
+  .dps-sub-tag {
+    font-size: 0.56rem;
+    font-weight: 800;
+    color: #92400e;
+    background: #fef3c7;
+    padding: 0 3px;
+    border-radius: 3px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
   .kisti-tag {
     font-size: 0.78rem;
     font-weight: 800;
@@ -412,6 +434,11 @@
   .kisti-wed .kisti-tag {
     background: #dcfce7;
     color: #166534;
+  }
+
+  .kisti-dps .kisti-tag {
+    background: #fde68a;
+    color: #78350f;
   }
 
   .day-cell.holiday {
@@ -457,6 +484,10 @@
   .day-cell.selected .kisti-tag {
     background: rgba(255, 255, 255, 0.25) !important;
     color: #ffffff !important;
+  }
+  .day-cell.selected .dps-sub-tag {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #fef08a !important;
   }
   .check-badge {
     position: absolute;
@@ -560,8 +591,8 @@
 
 <div class="app-container">
   <div class="header">
-    <h1>📅 বাবার কিস্তি ক্যালেন্ডার (২০২৬–২০২৭)</h1>
-    <p>রবি: ১,০০০৳ | বুধ: ৮৫০৳ (২ ডিসে পর্যন্ত), এরপর ৬০০৳ • ছুটিতে বন্ধ</p>
+    <h1>📅 বাবার কিস্তি ও ডিপিএস ক্যালেন্ডার (২০২৬–২০২৭)</h1>
+    <p>রবি: ১,০০০৳ | বুধ: ৮৫০৳/৬০০৳ + মাসের ১ম বুধবার ৩০০৳ DPS</p>
   </div>
 
   <!-- Top Automatic + Tapped Calculator -->
@@ -636,7 +667,8 @@
   <!-- Legend -->
   <div class="legend">
     <div class="legend-item"><span class="dot" style="background:#dbeafe;border:1px solid #93c5fd;"></span> রবিবার (১,০০০৳)</div>
-    <div class="legend-item"><span class="dot" style="background:#dcfce7;border:1px solid #86efac;"></span> বুধবার (৮৫০৳ / ৬০০৳)</div>
+    <div class="legend-item"><span class="dot" style="background:#fef3c7;border:1px solid #fcd34d;"></span> ১ম বুধ (+৩০০৳ DPS)</div>
+    <div class="legend-item"><span class="dot" style="background:#dcfce7;border:1px solid #86efac;"></span> অন্যান্য বুধবার</div>
     <div class="legend-item"><span class="dot" style="background:#0f766e;"></span> ট্যাপ করা</div>
     <div class="legend-item"><span class="dot" style="background:#fee2e2;border:1px solid #fca5a5;"></span> ব্যাংক ছুটি (OFF)</div>
   </div>
@@ -659,9 +691,10 @@
 
 <script>
   const SUNDAY_AMOUNT = 1000;
+  const DPS_AMOUNT = 300;
 
-  // Date-based Wednesday rate: up to 2026-12-02 is 850 Tk; after 2026-12-02 is 600 Tk
-  function getWednesdayAmount(year, month, day) {
+  // Base Wednesday kisti rate: up to 2026-12-02 is 850 Tk; after 2026-12-02 is 600 Tk
+  function getBaseWednesdayAmount(year, month, day) {
     if (year < 2026) return 850;
     if (year > 2026) return 600;
     if (month < 11) return 850;
@@ -669,10 +702,22 @@
     return 600;
   }
 
-  function getKistiAmount(year, month, day, dow) {
-    if (dow === 0) return SUNDAY_AMOUNT;
-    if (dow === 3) return getWednesdayAmount(year, month, day);
-    return 0;
+  // Day 1..7 and dow === 3 means it's the 1st Wednesday of the month
+  function isFirstWednesdayOfMonth(day, dow) {
+    return dow === 3 && day <= 7;
+  }
+
+  function getKistiDetails(year, month, day, dow) {
+    if (dow === 0) {
+      return { total: SUNDAY_AMOUNT, base: SUNDAY_AMOUNT, dps: 0, isFirstWed: false };
+    }
+    if (dow === 3) {
+      const base = getBaseWednesdayAmount(year, month, day);
+      const isFirstWed = isFirstWednesdayOfMonth(day, dow);
+      const dps = isFirstWed ? DPS_AMOUNT : 0;
+      return { total: base + dps, base, dps, isFirstWed };
+    }
+    return { total: 0, base: 0, dps: 0, isFirstWed: false };
   }
 
   const MONTHS_BN = [
@@ -747,8 +792,8 @@
     "2027-12-31": "ব্যাংক হলিডে (বার্ষিক সমাপনী)"
   };
 
-  const STORAGE_SELECTED_KEY = "eshan_kisti_selected_v4";
-  const STORAGE_HOLIDAYS_KEY = "eshan_kisti_holidays_v4";
+  const STORAGE_SELECTED_KEY = "eshan_kisti_selected_v5";
+  const STORAGE_HOLIDAYS_KEY = "eshan_kisti_holidays_v5";
 
   let selectedDates = JSON.parse(localStorage.getItem(STORAGE_SELECTED_KEY) || "{}");
   let holidaysMap = JSON.parse(localStorage.getItem(STORAGE_HOLIDAYS_KEY) || "null");
@@ -784,7 +829,7 @@
     t.textContent = msg;
     t.classList.add("show");
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove("show"), 2200);
+    t._timer = setTimeout(() => t.classList.remove("show"), 2400);
   }
 
   function initSelectors() {
@@ -899,15 +944,19 @@
     }
 
     if (dayOfWeek !== 0 && dayOfWeek !== 3) {
-      const wedRate = getWednesdayAmount(currentYear, currentMonth, dayNum);
-      showToast(`শুধুমাত্র রবিবার (১,০০০৳) ও বুধবার (${toBnNum(wedRate)}৳) কিস্তির দিন`);
+      const wedRate = getBaseWednesdayAmount(currentYear, currentMonth, dayNum);
+      showToast(`রবি: ১,০০০৳ | বুধ: ${toBnNum(wedRate)}৳ (১ম বুধ +৩০০৳ DPS)`);
       return;
     }
 
+    const details = getKistiDetails(currentYear, currentMonth, dayNum, dayOfWeek);
     if (selectedDates[dateKey]) {
       delete selectedDates[dateKey];
     } else {
       selectedDates[dateKey] = true;
+      if (details.isFirstWed) {
+        showToast(`১ম বুধবার: ${toBnNum(details.base)}৳ কিস্তি + ৩০০৳ DPS = ${toBnNum(details.total)}৳`);
+      }
     }
     localStorage.setItem(STORAGE_SELECTED_KEY, JSON.stringify(selectedDates));
     renderCalendar();
@@ -928,6 +977,7 @@
     let activeSunTotal = 0;
     let activeWedCount = 0;
     let activeWedTotal = 0;
+    let activeDpsTotal = 0;
     let skippedKistiCount = 0;
     let monthHolidays = [];
 
@@ -953,14 +1003,16 @@
 
       const isSunday = dow === 0;
       const isWednesday = dow === 3;
-      const kistiAmount = getKistiAmount(currentYear, currentMonth, day, dow);
+      const details = getKistiDetails(currentYear, currentMonth, day, dow);
+      const kistiAmount = details.total;
 
       if (holidayName) {
         monthHolidays.push({
           day,
           dow,
           name: holidayName,
-          kistiAmount
+          kistiAmount,
+          isFirstWed: details.isFirstWed
         });
         if (kistiAmount > 0) {
           skippedKistiCount++;
@@ -971,11 +1023,12 @@
       } else {
         if (isSunday) {
           activeSunCount++;
-          activeSunTotal += kistiAmount;
+          activeSunTotal += details.total;
         }
         if (isWednesday) {
           activeWedCount++;
-          activeWedTotal += kistiAmount;
+          activeWedTotal += details.total;
+          activeDpsTotal += details.dps;
         }
       }
 
@@ -995,7 +1048,11 @@
       } else if (isSunday) {
         cell.classList.add("kisti-sun");
       } else if (isWednesday) {
-        cell.classList.add("kisti-wed");
+        if (details.isFirstWed) {
+          cell.classList.add("kisti-dps");
+        } else {
+          cell.classList.add("kisti-wed");
+        }
       }
 
       if (isSelected) {
@@ -1014,6 +1071,9 @@
         }
         innerHTML += `<span class="holiday-tag" title="${holidayName}">${holidayName}</span>`;
       } else if (kistiAmount > 0) {
+        if (details.isFirstWed) {
+          innerHTML += `<span class="dps-sub-tag">+DPS</span>`;
+        }
         innerHTML += `<span class="kisti-tag">${toBnNum(kistiAmount)}৳</span>`;
       }
 
@@ -1040,11 +1100,14 @@
     document.getElementById("tappedCount").textContent = `${toBnNum(tappedCount)}টি কিস্তি সিলেক্টেড`;
 
     document.getElementById("monthlyTotal").textContent = `${toBnNum(monthlyRequired)} ৳`;
-    document.getElementById("monthlyCount").textContent = `ছুটি বাদে মোট ${toBnNum(totalActiveKisti)}টি কিস্তি`;
+    document.getElementById("monthlyCount").textContent = activeDpsTotal > 0
+      ? `ছুটি বাদে ${toBnNum(totalActiveKisti)}টি কিস্তি (DPS সহ)`
+      : `ছুটি বাদে মোট ${toBnNum(totalActiveKisti)}টি কিস্তি`;
 
+    const dpsNote = activeDpsTotal > 0 ? ` [DPS ৩০০৳ সহ]` : ``;
     document.getElementById("monthlyBreakdown").innerHTML = `
-      <span>রবি: <b>${toBnNum(activeSunCount)}টি</b> (${toBnNum(activeSunTotal)}৳) + বুধ: <b>${toBnNum(activeWedCount)}টি</b> (${toBnNum(activeWedTotal)}৳)</span>
-      <span class="badge-pill">ছুটিতে কিস্তি বন্ধ: ${toBnNum(skippedKistiCount)}টি</span>
+      <span>রবি: <b>${toBnNum(activeSunCount)}টি</b> (${toBnNum(activeSunTotal)}৳) + বুধ: <b>${toBnNum(activeWedCount)}টি</b> (${toBnNum(activeWedTotal)}৳${dpsNote})</span>
+      <span class="badge-pill">ছুটিতে বন্ধ: ${toBnNum(skippedKistiCount)}টি</span>
     `;
 
     const hContainer = document.getElementById("holidayListContainer");
